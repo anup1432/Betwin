@@ -1,0 +1,8 @@
+body.light {
+  background: #fafafa;
+  color: #222;
+}
+.app-container {
+  background: #fff;
+  border-radius: 12px;
+}
