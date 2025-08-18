@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Betwin Prediction Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <span class="logo">BTC</span>
+    <div class="balance">Balance: <span id="balance">100.00</span> USDT</div>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+  </header>
+
+  <div class="mainbox">
+    <div class="tabs">
+      <div class="tab" id="tab5s" onclick="selectRound(5)">5s $1-50</div>
+      <div class="tab active" id="tab50" onclick="selectRound(50)">5s $50-100</div>
+    </div>
+    <div class="subtitle">Up Wins/Down Wins</div>
+    <div class="gameboard">
+      <div class="match-info">
+        <div class="win-up">$1.00 <br> <span style="font-size:0.85em;color:#25d47e;">208.3%</span></div>
+        <div class="timer" id="timer">5 Sec</div>
+        <div class="win-down">$1.00 <br> <span style="font-size:0.85em;color:#ef3838;">190.52%</span></div>
+      </div>
+      <div class="price-row">
+        <div class="price-box" id="startPrice">117,699.7072</div>
+        <div class="price-box" id="livePrice">117,695.1604</div>
+      </div>
+      <canvas id="graph" style="width:100%;height:100px;background:#101316;border-radius:9px;margin-bottom:8px;"></canvas>
+      <div class="player-row">
+        <span class="p-up">412 Players <span style="color:#25d47e;">$100.00</span></span>
+        <span class="p-down">15 Players <span style="color:#ef3838;">$93.02</span></span>
+      </div>
+      <div class="multiplier-row">
+        <button class="multi-btn active" id="multi1" onclick="setMultiplier(1)">1</button>
+        <button class="multi-btn" id="multi2" onclick="setMultiplier(2)">2x</button>
+        <button class="multi-btn" id="multiHalf" onclick="setMultiplier(0.5)">1/2</button>
+      </div>
+      <div class="amount-row">
+        <button class="chip active" onclick="setAmount(5)">$5</button>
+        <button class="chip" onclick="setAmount(10)">$10</button>
+        <button class="chip" onclick="setAmount(20)">$20</button>
+        <button class="chip" onclick="setAmount(50)">$50</button>
+      </div>
+      <div class="action-row">
+        <button class="bet-btn" onclick="bet('up')">Up</button>
+        <button class="bet-btn down" onclick="bet('down')">Down</button>
+      </div>
+    </div>
+    <div class="tabs" style="margin-bottom:0;">
+      <div class="tab" onclick="showTab('positions')">Positions</div>
+      <div class="tab active" onclick="showTab('history')">History</div>
+      <div class="tab" onclick="showTab('leaderboard')">Leaderboard</div>
+    </div>
+    <div id="tabContent">
+      <table class="history-table">
+        <tr><th>Time</th><th>Type</th><th>Currency</th><th>Entry</th></tr>
+        <tr><td>2025-08-16 13:02:53</td><td style="color:#ef3838;">DOWN</td><td>USDT</td><td>117,690</td></tr>
+        <tr><td>2025-08-16 12:47:13</td><td style="color:#25d47e;">UP</td><td>USDT</td><td>117,699</td></tr>
+      </table>
+    </div>
+  </div>
+  <script src="main.js"></script>
+</body>
+</html>
