@@ -1,98 +1,106 @@
-const { useState, useEffect } = React;
+const graphCanvas = document.getElementById('graphCanvas');
+const ctx = graphCanvas.getContext('2d');
+const graphNumber = document.getElementById('graphNumber');
+const balanceSpan = document.getElementById('balance');
+const messageDiv = document.getElementById('message');
+const betAmountInput = document.getElementById('betAmount');
 
-function BetwinApp() {
-  const [balance, setBalance] = useState(1000); // Starting balance
-  const [theme, setTheme] = useState("dark");
-  const [graphValue, setGraphValue] = useState(100); // Simulated graph value
-  const [graphUp, setGraphUp] = useState(true); // Graph direction up/down
-  const [betAmount, setBetAmount] = useState(10);
-  const [betSide, setBetSide] = useState(null);
-  const [message, setMessage] = useState("");
+let balance = 1000;
+let graphValue = 100;
+let graphDirectionUp = true;
+let betPlaced = false;
+let betSide = null;
+let betAmount = 0;
 
-  // Simulate graph changes every 5s with random up/down and value changes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const up = Math.random() > 0.5;
-      const change = Math.floor(Math.random() * 10) + 1;
-      setGraphUp(up);
-      setGraphValue((val) => up ? val + change : val - change);
-      
-      // Check bet result if bet placed
-      if (betSide !== null) {
-        if ((betSide === "up" && up) || (betSide === "down" && !up)) {
-          const winAmount = betAmount * 2 * 0.98; // 2% fee
-          setBalance((bal) => bal + winAmount);
-          setMessage(`You won ${winAmount.toFixed(2)} USDT!`);
-        } else {
-          setMessage(`You lost ${betAmount} USDT!`);
-        }
-        setBetSide(null);
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [betSide, betAmount]);
+function resizeCanvas() {
+  graphCanvas.width = graphCanvas.clientWidth;
+  graphCanvas.height = graphCanvas.clientHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-  // Place bet handler
-  const placeBet = (side) => {
-    if (betSide !== null) {
-      setMessage("Wait for current round to finish!");
-      return;
-    }
-    if (betAmount <= 0 || betAmount > balance) {
-      setMessage("Invalid bet amount!");
-      return;
-    }
-    setBalance((bal) => bal - betAmount);
-    setBetSide(side);
-    setMessage(`Bet placed on ${side.toUpperCase()}`);
-  };
+const graphHistory = [graphValue];
+const maxPoints = 50;
 
-  // Toggle theme
-  useEffect(() => {
-    if (theme === "dark") {
-      document.body.classList.remove("light");
-    } else {
-      document.body.classList.add("light");
-    }
-  }, [theme]);
+function drawGraph() {
+  ctx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
+  const w = graphCanvas.width;
+  const h = graphCanvas.height;
+  ctx.beginPath();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = graphDirectionUp ? '#2ecc40' : '#ff4136';
 
-  return (
-    <div className="container">
-      <header className="header">
-        <div className="balance-section">
-          Balance: {balance.toFixed(2)} USDT
-          <button className="deposit-btn" onClick={() => alert("Deposit feature coming soon!")}>+ Deposit</button>
-        </div>
-        <button className="menu-btn" onClick={() => alert("Menu coming soon!")}>☰</button>
-      </header>
+  const length = graphHistory.length;
+  const sliceStart = length > maxPoints ? length - maxPoints : 0;
+  const points = graphHistory.slice(sliceStart);
 
-      <main className="game-area">
-        <div className={`graph ${graphUp ? "graph-point-up" : "graph-point-down"}`}>
-          <div className="graph-number">{graphValue}</div>
-          <p>Graph shows {graphUp ? "UP" : "DOWN"}</p>
-        </div>
+  const maxVal = Math.max(...points);
+  const minVal = Math.min(...points);
+  const rangeVal = maxVal - minVal || 1;
 
-        <div>
-          <input
-            type="number"
-            value={betAmount}
-            min="1"
-            max={balance}
-            onChange={(e) => setBetAmount(Number(e.target.value))}
-            placeholder="Bet amount"
-          />
-          <button className="bet-btn" onClick={() => placeBet("up")}>Bet Up</button>
-          <button className="bet-btn red" onClick={() => placeBet("down")}>Bet Down</button>
-        </div>
+  for (let i = 0; i < points.length; i++) {
+    const x = (w / (maxPoints - 1)) * i;
+    const y = h - ((points[i] - minVal) / rangeVal) * h;
 
-        <p>{message}</p>
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
 
-        <button className="theme-toggle" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-          Switch to {theme === "dark" ? "Light" : "Dark"} Theme
-        </button>
-      </main>
-    </div>
-  );
+  graphNumber.textContent = graphValue.toFixed(2);
+  graphNumber.className = 'graph-number ' + (graphDirectionUp ? 'graph-up' : 'graph-down');
 }
 
-ReactDOM.createRoot(document.getElementById("root")).render(<BetwinApp />);
+function updateGraph() {
+  graphDirectionUp = Math.random() > 0.5;
+  const change = (Math.random() * 5) + 1;
+  graphValue += graphDirectionUp ? change : -change;
+  graphHistory.push(graphValue);
+
+  if (graphHistory.length > 100) graphHistory.shift();
+
+  drawGraph();
+
+  if (betPlaced) {
+    if ((betSide === 'up' && graphDirectionUp) || (betSide === 'down' && !graphDirectionUp)) {
+      const winnings = betAmount * 2 * 0.98; // 2% fee
+      balance += winnings;
+      messageDiv.textContent = `You won ${winnings.toFixed(2)} USDT!`;
+    } else {
+      messageDiv.textContent = `You lost ${betAmount.toFixed(2)} USDT!`;
+    }
+    betPlaced = false;
+    betSide = null;
+    betAmount = 0;
+    balanceSpan.textContent = balance.toFixed(2);
+    betAmountInput.max = balance.toFixed(2);
+  } else {
+    messageDiv.textContent = '';
+  }
+}
+
+setInterval(updateGraph, 5000);
+
+function placeBet(side) {
+  if (betPlaced) {
+    alert('Wait for the next round!');
+    return;
+  }
+  betAmount = parseFloat(betAmountInput.value);
+  if (isNaN(betAmount) || betAmount <= 0 || betAmount > balance) {
+    alert('Invalid bet amount!');
+    return;
+  }
+  balance -= betAmount;
+  balanceSpan.textContent = balance.toFixed(2);
+  betSide = side;
+  betPlaced = true;
+  messageDiv.textContent = `Bet placed on ${side.toUpperCase()}. Wait for result!`;
+  betAmountInput.value = '';
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('light');
+}
+
+drawGraph();
