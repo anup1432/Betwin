@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Betwin Stock Prediction Game</title>
   <style>
-    /* Basic styles and dark/light theme */
+    /* Root variables */
     :root {
       --bg-dark: #181818;
       --text-dark: #fafafa;
@@ -17,6 +17,7 @@
       --card-bg-light: #fff;
       --border-radius: 10px;
     }
+    /* Body */
     body {
       margin: 0; padding: 0;
       background: var(--bg-dark);
@@ -28,6 +29,7 @@
       background: var(--bg-light);
       color: var(--text-light);
     }
+    /* Header */
     header {
       display: flex; justify-content: space-between; align-items: center;
       padding: 12px 20px;
@@ -63,6 +65,7 @@
       color: inherit;
       cursor: pointer;
     }
+    /* Main */
     main {
       max-width: 640px;
       margin: 40px auto;
@@ -76,6 +79,7 @@
       background: var(--card-bg-light);
       box-shadow: 0 2px 12px rgba(0,0,0,0.1);
     }
+    /* Graph area */
     .graph {
       position: relative;
       height: 250px;
@@ -105,8 +109,10 @@
     .graph-down .graph-number {
       color: var(--red);
     }
+    /* Betting controls */
     .bet-controls {
       display: flex; justify-content: center; gap: 16px;
+      margin-bottom: 14px;
     }
     .bet-btn {
       flex: 1;
@@ -135,22 +141,26 @@
       width: 100px;
       padding: 10px;
       font-size: 1.2em;
-      margin-right: 20px;
       border-radius: var(--border-radius);
       border: 1px solid #999;
       text-align: center;
     }
     label {
       font-weight: 600;
+      margin-right: 10px;
     }
+    /* Message */
     .message {
       text-align: center;
       margin: 18px 0;
       font-weight: 600;
       font-size: 1.1em;
+      min-height: 24px;
     }
+    /* Theme toggle button */
     .theme-toggle {
-      margin-top: 24px;
+      display: block;
+      margin: 24px auto 0 auto;
       background: #333;
       border: none;
       color: white;
@@ -186,8 +196,8 @@
       <div id="graphNumber" class="graph-number">100</div>
     </div>
 
-    <div style="margin-bottom: 14px; text-align: center;">
-      <label for="betAmount">Bet Amount (USDT): </label>
+    <div style="text-align: center; margin-bottom:14px;">
+      <label for="betAmount">Bet Amount (USDT):</label>
       <input type="number" id="betAmount" value="10" min="1" max="1000" />
     </div>
 
@@ -201,14 +211,14 @@
     <button class="theme-toggle" onclick="toggleTheme()">Switch Theme</button>
   </main>
 
-  <script>
-  // Simple graph simulation and bet game logic
+<script>
   const graphCanvas = document.getElementById('graphCanvas');
   const ctx = graphCanvas.getContext('2d');
   const graphNumber = document.getElementById('graphNumber');
   const balanceSpan = document.getElementById('balance');
   const messageDiv = document.getElementById('message');
   const betAmountInput = document.getElementById('betAmount');
+
   let balance = 1000;
   let graphValue = 100;
   let graphDirectionUp = true;
@@ -223,8 +233,8 @@
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  // Graph points history for smooth line
   const graphHistory = [graphValue];
+  const maxPoints = 50;
 
   function drawGraph() {
     ctx.clearRect(0, 0, graphCanvas.width, graphCanvas.height);
@@ -232,21 +242,18 @@
     const h = graphCanvas.height;
     ctx.beginPath();
     ctx.lineWidth = 3;
-
-    // Color green or red depending on direction for last segment
     ctx.strokeStyle = graphDirectionUp ? '#2ecc40' : '#ff4136';
 
     const length = graphHistory.length;
-    const maxPoints = 50;
     const sliceStart = length > maxPoints ? length - maxPoints : 0;
     const points = graphHistory.slice(sliceStart);
 
+    const maxVal = Math.max(...points);
+    const minVal = Math.min(...points);
+    const rangeVal = maxVal - minVal || 1;
+
     for (let i = 0; i < points.length; i++) {
       const x = (w / (maxPoints - 1)) * i;
-      // Normalize vertical position, map value range to canvas height
-      const maxVal = Math.max(...points);
-      const minVal = Math.min(...points);
-      const rangeVal = maxVal - minVal || 1;
       const y = h - ((points[i] - minVal) / rangeVal) * h;
 
       if (i === 0) ctx.moveTo(x, y);
@@ -259,18 +266,15 @@
   }
 
   function updateGraph() {
-    // Randomly decide up/down and change value by 1-5
     graphDirectionUp = Math.random() > 0.5;
     const change = (Math.random() * 5) + 1;
     graphValue += graphDirectionUp ? change : -change;
     graphHistory.push(graphValue);
 
-    // Limit graphHistory length to avoid overflow
     if (graphHistory.length > 100) graphHistory.shift();
 
     drawGraph();
 
-    // Bet checking logic every 5 seconds
     if (betPlaced) {
       if ((betSide === 'up' && graphDirectionUp) || (betSide === 'down' && !graphDirectionUp)) {
         const winnings = betAmount * 2 * 0.98; // 2% fee
@@ -313,8 +317,7 @@
     document.body.classList.toggle('light');
   }
 
-  // Initial draw
   drawGraph();
-  </script>
+</script>
 </body>
 </html>
