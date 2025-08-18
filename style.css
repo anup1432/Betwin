@@ -1,0 +1,144 @@
+:root {
+  --primary-bg: #181818;
+  --primary-text: #fafafa;
+  --accent-green: #2ecc40;
+  --accent-red: #ff4136;
+  --card-bg: #232323;
+  --border-radius: 10px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--primary-bg);
+  color: var(--primary-text);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: background 0.3s, color 0.3s;
+}
+
+/* Light theme example */
+body.light {
+  --primary-bg: #f4f6fa;
+  --primary-text: #1a1a1a;
+  --card-bg: #fff;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 24px;
+  background: var(--card-bg);
+  border-bottom: 1px solid #4442;
+}
+
+.balance-section {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.deposit-btn {
+  background: var(--accent-green);
+  color: #fff;
+  border: none;
+  padding: 6px 16px;
+  margin-left: 12px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+}
+.menu-btn {
+  background: none;
+  color: var(--primary-text);
+  border: none;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+
+.game-area {
+  margin: 32px auto;
+  padding: 20px;
+  max-width: 600px;
+  background: var(--card-bg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 2px 16px #2222;
+}
+
+/* Graph styling */
+.graph {
+  width: 100%;
+  height: 240px;
+  background: #191b22;
+  border-radius: var(--border-radius);
+  box-shadow: 0 1px 8px #2224;
+  margin-bottom: 18px;
+  position: relative;
+}
+.graph-point-up {
+  background: var(--accent-green);
+}
+.graph-point-down {
+  background: var(--accent-red);
+}
+.graph-number {
+  position: absolute;
+  right: 16px;
+  top: 16px;
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+/* Bot/avatar styles */
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #eee;
+  object-fit: cover;
+  border: 2px solid #555;
+  margin-right: 8px;
+  box-shadow: 0 0 8px #2223;
+}
+
+.bot-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  background: #282d38;
+  padding: 8px 10px;
+  border-radius: var(--border-radius);
+}
+
+.bet-btn {
+  background: var(--accent-green);
+  color: #fff;
+  border: none;
+  padding: 8px 24px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: bold;
+  margin-right: 12px;
+  margin-top: 12px;
+}
+.bet-btn.red {
+  background: var(--accent-red);
+}
+
+.leaderboard, .history {
+  background: var(--card-bg);
+  padding: 12px;
+  border-radius: var(--border-radius);
+  margin: 20px 0;
+  box-shadow: 0 1px 8px #2222;
+}
+
+.theme-toggle {
+  margin: 18px 0 0 0;
+  padding: 8px 18px;
+  border-radius: var(--border-radius);
+  border: none;
+  background: #333;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1em;
+}
