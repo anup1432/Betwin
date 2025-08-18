@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>betwin - Stock Prediction Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { background: #1a2030; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; margin: 0; }
+    .container { max-width: 1100px; margin: 30px auto; padding: 24px; background: #222935; border-radius: 13px; box-shadow: 0 0 16px #0003; }
+    h1 { color: #23db4b; text-align: center; letter-spacing: 2px; }
+    hr { border: none; border-top: 2px solid #292e3a; margin: 25px 0; }
+    .wallet { background: #252a35; border-radius: 10px; padding: 14px 20px; display: flex; align-items: center; margin-bottom: 20px; justify-content: space-between;}
+    .money-btn { background: #23db4b; border: none; border-radius: 7px; color: #fff; padding: 5px 16px; font-size: 15px; margin-left: 10px; cursor: pointer;}
+    .chart { background: #181e25; height: 240px; border-radius: 8px; margin: 16px 0; position: relative; }
+    .chart-label { position: absolute; left: 16px; top: 22px; color: #23db4b;}
+    .bet-form { background: #252a35; border-radius: 8px; padding: 16px; margin-bottom: 22px;}
+    .bet-form button { background: #23db4b; color: #fff; border: none; border-radius: 6px; padding: 7px 20px; font-size: 16px; margin-right: 10px;}
+    .bot-section { display: flex; justify-content: space-between; margin-bottom: 30px;}
+    .bot-card { background: #192136; padding: 13px 8px; border-radius: 8px; text-align: center; width: 45%;}
+    .bot-avatar { width: 55px; border-radius: 14px; margin: 6px;}
+    .lb, .history, .positions, .admin { background: #181e25; border-radius: 8px; padding: 16px; margin-bottom: 30px;}
+    table { width: 100%; border-collapse: collapse;}
+    th, td { text-align: left; padding: 7px; font-size: 15px;}
+    th { color: #23db4b;}
+    .footer { margin-top: 38px; color: #bbb; text-align: center;}
+    a { color: #28a2ef;}
+    .admin input, .bet-form input { margin: 5px 0; padding: 6px; border-radius: 6px; border: none;}
+    .btn-admin { background:#f2b100; color: #181c28; border-radius:5px; border:none; padding:7px 15px; margin-left:3px; cursor:pointer;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>betwin</h1>
+    
+    <div class="wallet">
+      <div>
+        <strong>Wallets:</strong>
+        <span>TRC20:</span> <b style="color:#23db4b">TWZHqkbbYTnehQ2TxnH4NgNt4crGLNy8Ns</b>
+        <span style="margin-left:18px;">Balance:</span> <span id="bal" style="color:#f2b100">₹2000</span>
+      </div>
+      <button class="money-btn" onclick="incBal(1000)">Deposit ₹1000</button>
+      <button class="money-btn" onclick="decBal(1000)" style="background:#f15454">Withdraw ₹1000</button>
+    </div>
+
+    <div class="chart">
+      <div class="chart-label">NASDAQ:AAPL — ₹54,555</div>
+      <!-- Chart image ya SVG yahan dikh sakta hai -->
+    </div>
+
+    <div class="bet-form">
+      <strong>Place Your Bet:</strong><br>
+      <button onclick="alert('UP bet placed')">UP</button>
+      <button onclick="alert('DOWN bet placed')" style="background:#f15454">DOWN</button>
+      <input type="number" min="1" placeholder="Amount" style="width:120px;">
+      <button onclick="alert('Bet submitted')" style="background:#28a2ef">Submit</button>
+    </div>
+
+    <div class="bot-section">
+      <div class="bot-card">
+        <b style="color:green">UP SIDE BOTS</b><br>
+        <img class="bot-avatar" src="https://api.dicebear.com/6.x/bottts/svg?seed=bot1">
+        <img class="bot-avatar" src="https://api.dicebear.com/6.x/bottts/svg?seed=bot2"><br>
+        ₹250, ₹330
+      </div>
+      <div class="bot-card">
+        <b style="color:red">DOWN SIDE BOTS</b><br>
+        <img class="bot-avatar" src="https://api.dicebear.com/6.x/bottts/svg?seed=bot3">
+        <img class="bot-avatar" src="https://api.dicebear.com/6.x/bottts/svg?seed=bot4"><br>
+        ₹280, ₹310
+      </div>
+    </div>
+    
+    <div class="positions">
+      <strong>My Bets &amp; Positions</strong>
+      <table>
+        <tr><th>Direction</th><th>Amount</th><th>Status</th><th>Time</th></tr>
+        <tr><td style="color:green">UP</td><td>₹700</td><td style="color:orange">Pending</td><td>11:35</td></tr>
+        <tr><td style="color:red">DOWN</td><td>₹350</td><td style="color:green">Won</td><td>11:32</td></tr>
+      </table>
+    </div>
+    
+    <div class="history">
+      <strong>User History</strong>
+      <table>
+        <tr><th>Type</th><th>Details</th><th>Amount</th><th>Status</th><th>Time</th></tr>
+        <tr><td>Bet</td><td style="color:green">UP</td><td>₹500</td><td style="color:green">Win</td><td>11:10</td></tr>
+        <tr><td>Deposit</td><td>TRC20</td><td>₹1000</td><td style="color:green">Approved</td><td>10:58</td></tr>
+        <tr><td>Bet</td><td style="color:red">DOWN</td><td>₹600</td><td style="color:red">Lose</td><td>10:54</td></tr>
+      </table>
+    </div>
+    
+    <div class="lb">
+      <strong>Leaderboard</strong>
+      <table>
+        <tr><th>User</th><th>Profit</th></tr>
+        <tr><td>Shivam</td><td>₹2450</td></tr>
+        <tr><td>Ali</td><td>₹1200</td></tr>
+        <tr><td>Kapil</td><td>₹800</td></tr>
+      </table>
+    </div>
+    
+    <div class="admin">
+      <strong>Admin Panel</strong><br>
+      Username: <input placeholder="anup1432">
+      Password: <input type="password" placeholder="@nup1432">
+      <button class="btn-admin" onclick="alert('Login demo')">Login</button>
+      <hr>
+      <b>Pending Deposits</b><br>
+      Shivam - ₹1500 [TRC20] <button class="btn-admin" onclick="alert('Deposit Approved')">Approve</button>
+      <br>
+      <b>Pending Withdrawals</b><br>
+      Kapil - ₹1100 [ERC20] <button class="btn-admin" onclick="alert('Withdrawal Approved')">Approve</button>
+    </div>
+
+    <div class="footer">
+      Contact: <a href="https://t.me/capten_0_0_0" target="_blank">Telegram</a> | &copy; betwin game demo design
+    </div>
+  </div>
+  <script>
+    function incBal(x) {
+      const bal = document.getElementById('bal');
+      bal.textContent = '₹' + (parseInt(bal.textContent.replace('₹','')) + x);
+    }
+    function decBal(x) {
+      const bal = document.getElementById('bal');
+      let val = parseInt(bal.textContent.replace('₹',''));
+      bal.textContent = '₹' + (val >= x ? (val - x) : val);
+    }
+  </script>
+</body>
+</html>
