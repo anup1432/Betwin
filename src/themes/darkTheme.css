@@ -1,0 +1,8 @@
+body.dark {
+  background: #111;
+  color: #fff;
+}
+.app-container {
+  background: #222;
+  border-radius: 12px;
+}
