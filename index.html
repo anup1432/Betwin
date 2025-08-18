@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crypto Prediction Game</title>
+  <style>
+    :root {
+      --bg: #171b22;
+      --card: #232733;
+      --accent: #1e2633;
+      --green: #25d47e;
+      --red: #ef3838;
+      --yellow: #e7ed42;
+      --text: #fff;
+      --gray: #888;
+      --border-radius: 18px;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', Arial, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      padding: 18px 8px;
+      font-size: 1.1em;
+    }
+    .balance {
+      font-size: 1.03em;
+      font-weight: 600;
+    }
+    .logo { font-weight: bold; color: #fcb900; letter-spacing:1px; }
+    .menu-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 2em;
+      cursor: pointer;
+    }
+    .mainbox {
+      max-width: 430px;
+      margin: 26px auto 0 auto;
+      background: var(--card);
+      border-radius: var(--border-radius);
+      box-shadow: 0 1px 14px #0002;
+      padding: 0 0 16px 0;
+    }
+    .tabs {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin: 14px 0 0 0;
+    }
+    .tab {
+      padding: 7px 18px;
+      background: var(--accent);
+      border-radius: 16px;
+      cursor:pointer;
+      color: var(--gray);
+      font-weight: 600;
+    }
+    .tab.active {
+      background: var(--green);
+      color: var(--text);
+      font-weight: 700;
+    }
+    .subtitle {
+      text-align: center;
+      margin: 10px 0 3px 0;
+      color: var(--gray);
+      font-size:1em;
+    }
+    .gameboard {
+      padding: 7px 14px 10px 14px;
+    }
+    .match-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size:1.04em;
+    }
+    .wins {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 11px;
+      gap:8px;
+    }
+    .win-up, .win-down {
+      background: var(--accent);
+      padding: 7px 9px;
+      border-radius: 10px;
+      color: var(--green);
+      min-width: 85px;
+      text-align: center;
+      font-weight: 500;
+      font-size:1em;
+    }
+    .win-down { color: var(--red);}
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin:7px 0;
+    }
+    .price-box {
+      background: var(--yellow);
+      color: #222;
+      padding: 7px 13px;
+      border-radius: 18px;
+      font-weight: bold;
+      font-size: 1.06em;
+      box-shadow: 0 2px 8px #0002;
+    }
+    .timer {
+      margin: 0 auto 6px auto;
+      display:block;
+      width:78px;
+      height:78px;
+      background: var(--accent);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--yellow);
+      font-size:2em;
+      font-weight:900;
+      border:4px solid var(--green);
+      box-shadow:0 1px 12px #0003;
+    }
+    .player-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin:4px 0 13px 0;
+      padding:0 16px;
+      font-size:1em;
+      gap:14px;
+    }
+    .p-up, .p-down { font-weight:700; }
+    .p-up { color:var(--green);}
+    .p-down {color:var(--red);}
+    .amount-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin:13px 0;
+    }
+    .chip {
+      background: var(--accent);
+      color: var(--text);
+      padding: 8px 16px;
+      border-radius: 17px;
+      border:none;
+      cursor:pointer;
+      min-width:45px;
+      font-size:1em;
+      font-weight:600;
+      transition: background 0.2s;
+    }
+    .chip.active { background: var(--green);}
+    .multiplier-row {
+      display: flex;
+      gap:9px;
+      justify-content: center;
+      margin:1px 0;
+    }
+    .multi-btn {
+      background: var(--accent);
+      color: var(--yellow);
+      padding: 5px 16px;
+      border-radius: 14px;
+      border:none;
+      cursor:pointer;
+      font-weight:700;
+      font-size:1.08em;
+      transition: background 0.2s;
+    }
+    .multi-btn.active { background: var(--green); color: var(--text);}
+    .action-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin:15px 0 7px 0;
+    }
+    .bet-btn {
+      flex:1;
+      padding:15px 0;
+      border:none;
+      border-radius: 20px;
+      font-size:1.16em;
+      font-weight:700;
+      cursor:pointer;
+      background:var(--green);
+      color:var(--text);
+      transition: background 0.2s;
+    }
+    .bet-btn.down { background: var(--red);}
+    .bet-btn:active { opacity:0.8;}
+    .history-table {
+      width:93%;
+      margin:0 auto 15px auto;
+      background:var(--accent);
+      border-radius:14px;
+      font-size:0.97em;
+      color:var(--text);
+      padding:10px;
+    }
+    .history-table th {
+      color:var(--yellow);
+      font-weight:600;
+      padding:3px 7px;
+    }
+    .history-table td{
+      padding:2px 10px;
+    }
+    .modal-bg {
+      display:none;
+      position:fixed; left:0;top:0; right:0;bottom:0;
+      background:#0009; z-index:99;
+      justify-content:center;align-items:center;
+    }
+    .modal {
+      background: var(--card);
+      color: var(--text);
+      border-radius: 18px;
+      max-width: 320px;
+      width:90vw;
+      padding:24px 18px 20px 18px;
+      box-shadow:0 3px 20px #0007;
+      position:relative;
+    }
+    .modal .close {
+      position:absolute; right:15px; top:12px; background:none; border:none; color:var(--gray); font-size:2em; cursor:pointer;
+    }
+    .deposit-list { list-style:none; padding:0;}
+    .deposit-list li {
+      background: var(--accent);
+      margin:10px 0;
+      padding:12px 10px;
+      border-radius:13px;
+      font-size:1.1em;
+      display:flex;align-items:center;gap:8px;
+      cursor:pointer;
+      transition:background 0.2s;
+    }
+    .deposit-list li:hover {background:var(--green); color:var(--text);}
+    .modal-title { font-weight:700; font-size:1.18em; margin-bottom:16px;}
+    /* Responsive */
+    @media (max-width: 520px){
+      .mainbox {max-width:98vw;}
+      .gameboard {padding:5px;}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo">BTC</span>
+    <div class="balance">Balance: <span id="balance">100.00</span> USDT</div>
+    <button class="menu-btn" onclick="toggleMenu()">☰</button>
+  </header>
+
+  <div class="mainbox">
+    <div class="tabs">
+      <div class="tab active" id="tab5s" onclick="selectRound(5)">5s $1-50</div>
+      <div class="tab" id="tab50" onclick="selectRound(50)">5s $50-100</div>
+    </div>
+    <div class="subtitle">Up Wins/Down Wins</div>
+    <div class="gameboard">
+      <div class="match-info">
+        <div class="win-up">$1.00 <br> <span style="font-size:0.85em;color:var(--green)">208.3%</span></div>
+        <div class="timer" id="timer">10 Sec</div>
+        <div class="win-down">$1.00 <br> <span style="font-size:0.85em;color:var(--red)">190.52%</span></div>
+      </div>
+      <div class="price-row">
+        <div class="price-box" id="startPrice">117,699.7072</div>
+        <div class="price-box" id="livePrice">117,695.1604</div>
+      </div>
+      <!-- Chart placeholder -->
+      <canvas id="graph" style="width:100%;height:100px;background:#101316;border-radius:9px;margin-bottom:8px;"></canvas>
+      <div class="player-row">
+        <span class="p-up">412 Players <span style="color:var(--green);">$100.00</span></span>
+        <span class="p-down">15 Players <span style="color:var(--red);">$93.02</span></span>
+      </div>
+      <div class="multiplier-row">
+        <button class="multi-btn active" id="multi1" onclick="setMultiplier(1)">1</button>
+        <button class="multi-btn" id="multi2" onclick="setMultiplier(2)">2x</button>
+        <button class="multi-btn" id="multiHalf" onclick="setMultiplier(0.5)">1/2</button>
+      </div>
+      <div class="amount-row">
+        <button class="chip active" onclick="setAmount(5)">$5</button>
+        <button class="chip" onclick="setAmount(10)">$10</button>
+        <button class="chip" onclick="setAmount(20)">$20</button>
+        <button class="chip" onclick="setAmount(50)">$50</button>
+      </div>
+      <div class="action-row">
+        <button class="bet-btn" onclick="bet('up')">Up</button>
+        <button class="bet-btn down" onclick="bet('down')">Down</button>
+      </div>
+    </div>
+    <div class="tabs" style="margin-bottom:0;">
+      <div class="tab" onclick="showTab('positions')">Positions</div>
+      <div class="tab active" onclick="showTab('history')">History</div>
+      <div class="tab" onclick="showTab('leaderboard')">Leaderboard</div>
+    </div>
+    <div id="tabContent">
+      <!-- History table placeholder -->
+      <table class="history-table">
+        <tr><th>Time</th><th>Type</th><th>Currency</th><th>Entry</th></tr>
+        <tr><td>2025-08-16 13:02:53</td><td style="color:var(--red)">DOWN</td><td>USDT</td><td>117,690</td></tr>
+        <tr><td>2025-08-16 12:47:13</td><td style="color:var(--green)">UP</td><td>USDT</td><td>117,699</td></tr>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal-bg">
+    <div class="modal">
+      <button class="close" onclick="toggleModal('depositModal')">×</button>
+      <div class="modal-title">Deposit</div>
+      <div style="color:var(--gray);margin-bottom:12px;">Current wallet balance</div>
+      <ul class="deposit-list">
+        <li>💱 Swap in <span style="font-size:0.88em;color:var(--gray);">Exchange crypto assets</span></li>
+        <li>💳 Buy (one-time order) <span style="font-size:0.88em;color:var(--gray);">Card fiat purchase</span></li>
+        <li>⬇️ Receive <span style="font-size:0.88em;color:var(--gray);">From user or wallet</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Demo timer
+    let t = 10;
+    setInterval(() => {
+      t = t > 0 ? t-1 : 10;
+      document.getElementById('timer').textContent = t + ' Sec';
+    }, 1000);
+
+    // Modal functions
+    function toggleModal(id) {
+      const m = document.getElementById(id);
+      m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+    }
+    // For deposit button, you can add:
+    // <button class="deposit-btn" onclick="toggleModal('depositModal')">Deposit</button>
+
+    // Menu drawer sample (add yourself)
+    function toggleMenu() { alert("Menu coming soon!"); }
+
+    // Multiplier, amount selection UI logic (expand as needed)
+    function setMultiplier(m) {
+      ['multi1','multi2','multiHalf'].forEach(id =>
+        document.getElementById(id).classList.remove('active')
+      );
+      if (m == 1) document.getElementById('multi1').classList.add('active');
+      if (m == 2) document.getElementById('multi2').classList.add('active');
+      if (m == 0.5) document.getElementById('multiHalf').classList.add('active');
+    }
+    function setAmount(val) {
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      Array.from(document.querySelectorAll('.chip')).find(c=>c.textContent==='$'+val).classList.add('active');
+    }
+    // Tabs logic
+    function showTab(tab) {
+      document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+      if(tab==='positions') document.querySelectorAll('.tabs .tab')[0].classList.add('active');
+      if(tab==='history') document.querySelectorAll('.tabs .tab')[1].classList.add('active');
+      if(tab==='leaderboard') document.querySelectorAll('.tabs .tab')[2].classList.add('active');
+      document.getElementById('tabContent').innerHTML =
+      tab==='history' ? `<table class="history-table">
+        <tr><th>Time</th><th>Type</th><th>Currency</th><th>Entry</th></tr>
+        <tr><td>2025-08-16 13:02:53</td><td style="color:var(--red)">DOWN</td><td>USDT</td><td>117,690</td></tr>
+        <tr><td>2025-08-16 12:47:13</td><td style="color:var(--green)">UP</td><td>USDT</td><td>117,699</td></tr>
+      </table>`
+      : tab==='positions' ? `<div style="color:var(--gray);padding:22px;text-align:center;">No open positions.</div>`
+      : `<div style="color:var(--yellow);padding:22px;text-align:center;">Top players soon!</div>`;
+    }
+    // Dummy bet function
+    function bet(side) { alert("Bet placed: " + side.toUpperCase()); }
+
+    // Dummy graph draw (can upgrade with Chart.js or canvas logic)
+    const gc = document.getElementById('graph');
+    if(gc && gc.getContext){
+      let ctx = gc.getContext('2d');
+      let W = 420, H = 100;
+      gc.width = W; gc.height = H;
+      let points = Array.from({length:32},()=>115000+Math.random()*1200+Math.random()*400);
+      function drawDemoGraph(){
+        ctx.clearRect(0,0,W,H);
+        ctx.beginPath();
+        ctx.strokeStyle='#25d47e';
+        for(let i=0;i<points.length;i++){
+          let px = (W/(points.length-1))*i;
+          let py = H-(points[i]-115000)/1400*H;
+          if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+        }
+        ctx.lineWidth=3;
+        ctx.stroke();
+        ctx.fillStyle='#25d47e';
+        // End marker
+        ctx.beginPath();
+        let px = W-1, py = H-(points[points.length-1]-115000)/1400*H;
+        ctx.arc(px,py,5,0,2*Math.PI); ctx.fill();
+      }
+      drawDemoGraph();
+    }
+
+  </script>
+</body>
+        </html>
+        
