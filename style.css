@@ -1,144 +1,200 @@
 :root {
-  --primary-bg: #181818;
-  --primary-text: #fafafa;
-  --accent-green: #2ecc40;
-  --accent-red: #ff4136;
-  --card-bg: #232323;
+  --bg-dark: #181818;
+  --text-dark: #fafafa;
+  --bg-light: #f4f6fa;
+  --text-light: #111;
+  --green: #2ecc40;
+  --red: #ff4136;
+  --card-bg-dark: #232323;
+  --card-bg-light: #fff;
   --border-radius: 10px;
 }
 
 body {
   margin: 0;
   padding: 0;
-  background: var(--primary-bg);
-  color: var(--primary-text);
-  font-family: 'Segoe UI', Arial, sans-serif;
-  transition: background 0.3s, color 0.3s;
+  background: var(--bg-dark);
+  color: var(--text-dark);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
-/* Light theme example */
 body.light {
-  --primary-bg: #f4f6fa;
-  --primary-text: #1a1a1a;
-  --card-bg: #fff;
+  background: var(--bg-light);
+  color: var(--text-light);
 }
 
-.header {
+header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 24px;
-  background: var(--card-bg);
-  border-bottom: 1px solid #4442;
+  padding: 12px 20px;
+  background: var(--card-bg-dark);
+  border-bottom: 1px solid #4444;
 }
 
-.balance-section {
+body.light header {
+  background: var(--card-bg-light);
+  border-color: #ccc;
+}
+
+.balance {
+  font-weight: 600;
   font-size: 1.2em;
-  font-weight: bold;
 }
+
 .deposit-btn {
-  background: var(--accent-green);
-  color: #fff;
+  background: var(--green);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
   border: none;
-  padding: 6px 16px;
-  margin-left: 12px;
-  border-radius: var(--border-radius);
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
+  margin-left: 12px;
+  transition: background 0.3s ease;
 }
+
+.deposit-btn:hover {
+  background: #27ae35;
+}
+
 .menu-btn {
   background: none;
-  color: var(--primary-text);
   border: none;
-  font-size: 1.5em;
+  font-size: 1.8em;
+  color: inherit;
   cursor: pointer;
 }
 
-.game-area {
-  margin: 32px auto;
+main {
+  max-width: 640px;
+  margin: 40px auto;
   padding: 20px;
-  max-width: 600px;
-  background: var(--card-bg);
+  background: var(--card-bg-dark);
   border-radius: var(--border-radius);
-  box-shadow: 0 2px 16px #2222;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  transition: background 0.3s ease;
 }
 
-/* Graph styling */
+body.light main {
+  background: var(--card-bg-light);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
 .graph {
-  width: 100%;
-  height: 240px;
-  background: #191b22;
-  border-radius: var(--border-radius);
-  box-shadow: 0 1px 8px #2224;
-  margin-bottom: 18px;
   position: relative;
+  height: 250px;
+  background: #151515;
+  border-radius: var(--border-radius);
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);
+  margin-bottom: 20px;
 }
-.graph-point-up {
-  background: var(--accent-green);
+
+body.light .graph {
+  background: #fafafa;
+  box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.05);
 }
-.graph-point-down {
-  background: var(--accent-red);
+
+#graphCanvas {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius);
 }
+
 .graph-number {
   position: absolute;
-  right: 16px;
-  top: 16px;
-  font-size: 1.3em;
-  font-weight: bold;
+  top: 10px;
+  right: 15px;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--green);
+  user-select: none;
 }
 
-/* Bot/avatar styles */
-.avatar {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: #eee;
-  object-fit: cover;
-  border: 2px solid #555;
-  margin-right: 8px;
-  box-shadow: 0 0 8px #2223;
+.graph-down .graph-number {
+  color: var(--red);
 }
 
-.bot-row {
+.bet-controls {
   display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  background: #282d38;
-  padding: 8px 10px;
-  border-radius: var(--border-radius);
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
 .bet-btn {
-  background: var(--accent-green);
-  color: #fff;
-  border: none;
-  padding: 8px 24px;
-  border-radius: var(--border-radius);
+  flex: 1;
+  padding: 14px 0;
+  font-size: 1.3em;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 1em;
-  font-weight: bold;
-  margin-right: 12px;
-  margin-top: 12px;
-}
-.bet-btn.red {
-  background: var(--accent-red);
+  border: none;
+  border-radius: var(--border-radius);
+  color: white;
+  transition: background 0.3s ease;
 }
 
-.leaderboard, .history {
-  background: var(--card-bg);
-  padding: 12px;
+.bet-btn.up {
+  background: var(--green);
+}
+
+.bet-btn.up:hover {
+  background: #27ae35;
+}
+
+.bet-btn.down {
+  background: var(--red);
+}
+
+.bet-btn.down:hover {
+  background: #e03228;
+}
+
+input[type='number'] {
+  width: 100px;
+  padding: 10px;
+  font-size: 1.2em;
   border-radius: var(--border-radius);
-  margin: 20px 0;
-  box-shadow: 0 1px 8px #2222;
+  border: 1px solid #999;
+  text-align: center;
+}
+
+label {
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.message {
+  text-align: center;
+  margin: 18px 0;
+  font-weight: 600;
+  font-size: 1.1em;
+  min-height: 24px;
 }
 
 .theme-toggle {
-  margin: 18px 0 0 0;
-  padding: 8px 18px;
-  border-radius: var(--border-radius);
-  border: none;
+  display: block;
+  margin: 24px auto 0 auto;
   background: #333;
-  color: #fff;
+  border: none;
+  color: white;
+  padding: 10px 18px;
+  font-weight: 600;
+  border-radius: var(--border-radius);
   cursor: pointer;
-  font-size: 1em;
+  transition: background 0.3s ease;
+}
+
+.theme-toggle:hover {
+  background: #555;
+}
+
+body.light .theme-toggle {
+  background: #ddd;
+  color: #222;
+}
+
+body.light .theme-toggle:hover {
+  background: #bbb;
 }
