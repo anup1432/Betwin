@@ -1,56 +1,57 @@
-const API_BASE = "https://twin-winn.onrender.com"; // Apna backend URL
+const API_BASE = "https://twin-winn.onrender.com"; // Apna Render backend URL
 
-// User Registration
+// Registration
 function registerUser(username, password) {
   fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username, password})
+    body: JSON.stringify({ username, password })
   })
     .then(res => res.json())
     .then(data => {
-      alert("Registration: " + JSON.stringify(data));
+      alert("Registration: " + (data.message || data.error));
     })
     .catch(err => alert("Error: " + err.message));
 }
 
-// User Login
+// Login
 function loginUser(username, password) {
   fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({username, password})
+    body: JSON.stringify({ username, password })
   })
     .then(res => res.json())
     .then(data => {
       if (data.token) {
-        alert("Login success! Wallet: " + data.wallet);
-        // Store token for future requests
+        alert("Login Success! Wallet: $" + data.wallet);
         localStorage.setItem("token", data.token);
         localStorage.setItem("userId", data.userId);
+        updateWallet();
       } else {
-        alert("Login failed: " + data.error);
+        alert("Login Failed: " + (data.error || "Unknown error"));
       }
     })
     .catch(err => alert("Error: " + err.message));
 }
 
-// Place a Bet
+// Bet
 function placeBet(amount, side) {
   const userId = localStorage.getItem("userId");
   if (!userId) {
-    alert("Please log in first.");
+    alert("Login first!");
     return;
   }
   fetch(`${API_BASE}/api/bet`, {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({userId, amount, side})
+    body: JSON.stringify({ userId, amount, side })
   })
     .then(res => res.json())
     .then(data => {
       if (data.win !== undefined) {
-        alert(`Bet Placed! Result: ${data.win ? "Win" : "Lose"} | New Wallet: $${data.wallet}`);
+        alert(`Bet ${side.toUpperCase()} - Result: ${data.win ? "Win 🎉" : "Lose 😢"}\nNew Balance: $${data.wallet}`);
+        updateWallet();
       } else {
         alert("Bet failed: " + (data.error || JSON.stringify(data)));
       }
@@ -58,7 +59,24 @@ function placeBet(amount, side) {
     .catch(err => alert("Error: " + err.message));
 }
 
-// Example: Buttons can call these functions
+// Wallet Info
+function updateWallet() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) {
+    document.getElementById("walletInfo").innerText = "Please log in!";
+    return;
+  }
+  fetch(`${API_BASE}/api/wallet/${userId}`)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("walletInfo").innerText = "Wallet Balance: $" + data.balance;
+    })
+    .catch(err => {
+      document.getElementById("walletInfo").innerText = "Error fetching wallet.";
+    });
+}
+
+// Button Handlers
 document.getElementById("registerBtn").onclick = function() {
   const username = document.getElementById("regUser").value;
   const password = document.getElementById("regPass").value;
@@ -70,9 +88,15 @@ document.getElementById("loginBtn").onclick = function() {
   loginUser(username, password);
 };
 document.getElementById("betUpBtn").onclick = function() {
-  placeBet(10, "up");
+  const amount = +document.getElementById("betAmount").value;
+  placeBet(amount, "up");
 };
 document.getElementById("betDownBtn").onclick = function() {
-  placeBet(10, "down");
+  const amount = +document.getElementById("betAmount").value;
+  placeBet(amount, "down");
 };
+
+// On page load, show wallet if already logged in
+window.onload = updateWallet;
+
 
