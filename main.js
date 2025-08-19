@@ -1,95 +1,51 @@
-const API_BASE = "https://twin-winn.onrender.com"; // Render backend URL
-
-function registerUser(username, password) {
-  fetch(`${API_BASE}/api/auth/register`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, password })
-  })
-    .then(res => res.json())
-    .then(data => {
-      alert("Registration: " + (data.message || data.error));
-    })
-    .catch(err => alert("Error: " + err.message));
-}
-
-function loginUser(username, password) {
-  fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ username, password })
-  })
-    .then(res => res.json())
-    .then(data => {
-      if (data.token) {
-        alert("Login Success! Wallet: $" + data.wallet);
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userId", data.userId);
-        updateWallet();
-      } else {
-        alert("Login Failed: " + (data.error || "Unknown error"));
-      }
-    })
-    .catch(err => alert("Error: " + err.message));
-}
-
-function placeBet(amount, side) {
-  const userId = localStorage.getItem("userId");
+function getOrCreateUserId() {
+  let userId = localStorage.getItem("userId");
   if (!userId) {
-    alert("Login first!");
-    return;
+    userId = "u_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-6);
+    localStorage.setItem("userId", userId);
   }
-  fetch(`${API_BASE}/api/bet`, {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ userId, amount, side })
+  return userId;
+}
+
+// Show userId on page
+document.getElementById('userid-show').innerText = "Your User ID: " + getOrCreateUserId();
+
+// Bet actions example (Replace API_BASE with your actual backend URL)
+const API_BASE = "https://your-backend-url.com"; // optional, add as needed
+
+document.getElementById('betUpBtn').onclick = function() {
+  let amount = document.getElementById("betAmount").value;
+  let userId = getOrCreateUserId();
+  // API call example (backend required)
+  /*
+  fetch(API_BASE + '/api/bet/up', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ userId, amount })
   })
-    .then(res => res.json())
-    .then(data => {
-      if (data.win !== undefined) {
-        alert(`Bet ${side.toUpperCase()} - Result: ${data.win ? "Win 🎉" : "Lose 😢"}\nNew Balance: $${data.wallet}`);
-        updateWallet();
-      } else {
-        alert("Bet failed: " + (data.error || JSON.stringify(data)));
-      }
-    })
-    .catch(err => alert("Error: " + err.message));
+  .then(resp => resp.json())
+  .then(data => {
+    document.getElementById('walletInfo').innerText = data.wallet || "Bet placed!";
+  });
+  */
+  document.getElementById('walletInfo').innerText = `UP bet placed for $${amount} (UserID: ${userId})`;
+}
+document.getElementById('betDownBtn').onclick = function() {
+  let amount = document.getElementById("betAmount").value;
+  let userId = getOrCreateUserId();
+  // API call example (backend required)
+  /*
+  fetch(API_BASE + '/api/bet/down', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ userId, amount })
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    document.getElementById('walletInfo').innerText = data.wallet || "Bet placed!";
+  });
+  */
+  document.getElementById('walletInfo').innerText = `DOWN bet placed for $${amount} (UserID: ${userId})`;
 }
 
-function updateWallet() {
-  const userId = localStorage.getItem("userId");
-  if (!userId) {
-    document.getElementById("walletInfo").innerText = "Please log in!";
-    return;
-  }
-  fetch(`${API_BASE}/api/wallet/${userId}`)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("walletInfo").innerText = "Wallet Balance: $" + data.balance;
-    })
-    .catch(err => {
-      document.getElementById("walletInfo").innerText = "Error fetching wallet.";
-    });
-}
-
-// Button listeners
-document.getElementById("registerBtn").onclick = function() {
-  const username = document.getElementById("regUser").value;
-  const password = document.getElementById("regPass").value;
-  registerUser(username, password);
-};
-document.getElementById("loginBtn").onclick = function() {
-  const username = document.getElementById("loginUser").value;
-  const password = document.getElementById("loginPass").value;
-  loginUser(username, password);
-};
-document.getElementById("betUpBtn").onclick = function() {
-  const amount = +document.getElementById("betAmount").value;
-  placeBet(amount, "up");
-};
-document.getElementById("betDownBtn").onclick = function() {
-  const amount = +document.getElementById("betAmount").value;
-  placeBet(amount, "down");
-};
-
-window.onload = updateWallet;
+// You can show wallet info, history, analytics using this userId in your backend as needed
