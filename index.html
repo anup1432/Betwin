@@ -7,25 +7,32 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>Register</h2>
-  <input id="regUser" type="text" placeholder="Username" />
-  <input id="regPass" type="password" placeholder="Password" />
-  <button id="registerBtn">Register</button>
+  <div class="form-section">
+    <h2>Register</h2>
+    <input id="regUser" type="text" placeholder="Username" />
+    <input id="regPass" type="password" placeholder="Password" />
+    <button id="registerBtn">Register</button>
+  </div>
 
-  <h2>Login</h2>
-  <input id="loginUser" type="text" placeholder="Username" />
-  <input id="loginPass" type="password" placeholder="Password" />
-  <button id="loginBtn">Login</button>
+  <div class="form-section">
+    <h2>Login</h2>
+    <input id="loginUser" type="text" placeholder="Username" />
+    <input id="loginPass" type="password" placeholder="Password" />
+    <button id="loginBtn">Login</button>
+  </div>
 
-  <h2>Bet</h2>
-  <input id="betAmount" type="number" placeholder="Amount ($)" value="10" />
-  <button id="betUpBtn">Bet UP</button>
-  <button id="betDownBtn">Bet DOWN</button>
+  <div class="form-section">
+    <h2>Bet</h2>
+    <input id="betAmount" type="number" value="10" placeholder="Amount ($)" />
+    <button id="betUpBtn">Bet UP</button>
+    <button id="betDownBtn">Bet DOWN</button>
+  </div>
 
-  <h2>Wallet</h2>
-  <div id="walletInfo"></div>
+  <div class="form-section">
+    <h2>Wallet</h2>
+    <div id="walletInfo">Please log in!</div>
+  </div>
 
   <script src="main.js"></script>
 </body>
 </html>
-
