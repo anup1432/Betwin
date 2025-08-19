@@ -2,46 +2,96 @@ body {
   background: #181c24;
   color: #ebebeb;
   font-family: 'Segoe UI', Arial, sans-serif;
+  min-height: 100vh;
   margin: 0;
-  padding: 2rem;
+  padding: 0;
 }
+
+.container {
+  max-width: 380px;
+  margin: 3rem auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.main-title {
+  text-align: center;
+  color: #2fe6c6;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.card {
+  background: #23273a;
+  border-radius: 14px;
+  box-shadow: 0 3px 12px #0005;
+  padding: 2rem 1.2rem 1.6rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
 h2 {
-  font-size: 1.3rem;
-  margin-top: 2rem;
+  color: #21dac8;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
 }
-input, button {
-  padding: 0.7rem 1.2rem;
-  margin: 0.5rem 0.4rem 1rem 0;
+
+input,
+button {
+  padding: 0.8rem 1rem;
   border-radius: 7px;
   border: none;
   font-size: 1rem;
   background: #222531;
   color: #e2e2e2;
+  margin-bottom: 0.7rem;
+  outline: none;
+  transition: box-shadow .18s;
 }
-input::placeholder {
-  color: #bbb;
+
+input:focus {
+  box-shadow: 0 0 0 2px #2fe6c6;
 }
 button {
-  background: #2fe6c6;
+  background: linear-gradient(90deg,#2fe6c6 40%, #22a6d6 100%);
   color: #181c24;
-  font-weight: bold;
+  font-weight: 700;
   cursor: pointer;
-  margin-bottom: 1rem;
+  margin-top: 0.2rem;
+  margin-right: 0.3rem;
+  margin-left: 0;
+  transition: background .14s;
+  letter-spacing: 0.5px;
 }
 button:hover {
-  background: #1bc1a8;
+  background: linear-gradient(90deg,#1bc1a8 45%, #1978a5 100%);
 }
-form, .form-section {
-  background: #23273a;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px #0003;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  max-width: 350px;
+.userid-box {
+  font-size: 0.98rem;
+  color: #2fe6c6;
+  margin: 0.6rem 0 0.2rem 0;
+  word-break: break-all;
 }
 #walletInfo {
-  margin-top: 1rem;
+  margin-top: 0.4rem;
   padding: 1rem;
   background: #252b37;
   border-radius: 8px;
+  min-height: 1.7rem;
+  letter-spacing: 1px;
+}
+/* Responsive */
+@media (max-width: 480px) {
+  .container {
+    margin: 1.5rem 0.2rem;
+    max-width: 99vw;
+    padding: 0;
+  }
 }
