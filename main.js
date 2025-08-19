@@ -1,6 +1,5 @@
-const API_BASE = "https://twin-winn.onrender.com"; // Apna Render backend URL
+const API_BASE = "https://twin-winn.onrender.com"; // Render backend URL
 
-// Registration
 function registerUser(username, password) {
   fetch(`${API_BASE}/api/auth/register`, {
     method: "POST",
@@ -14,7 +13,6 @@ function registerUser(username, password) {
     .catch(err => alert("Error: " + err.message));
 }
 
-// Login
 function loginUser(username, password) {
   fetch(`${API_BASE}/api/auth/login`, {
     method: "POST",
@@ -35,7 +33,6 @@ function loginUser(username, password) {
     .catch(err => alert("Error: " + err.message));
 }
 
-// Bet
 function placeBet(amount, side) {
   const userId = localStorage.getItem("userId");
   if (!userId) {
@@ -59,7 +56,6 @@ function placeBet(amount, side) {
     .catch(err => alert("Error: " + err.message));
 }
 
-// Wallet Info
 function updateWallet() {
   const userId = localStorage.getItem("userId");
   if (!userId) {
@@ -76,7 +72,7 @@ function updateWallet() {
     });
 }
 
-// Button Handlers
+// Button listeners
 document.getElementById("registerBtn").onclick = function() {
   const username = document.getElementById("regUser").value;
   const password = document.getElementById("regPass").value;
@@ -96,5 +92,4 @@ document.getElementById("betDownBtn").onclick = function() {
   placeBet(amount, "down");
 };
 
-// On page load, show wallet if already logged in
 window.onload = updateWallet;
