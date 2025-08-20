@@ -1,22 +1,30 @@
-const express = require('express');
-const cors = require('cors');       // ------ Yeh line add karo
-const mongoose = require('mongoose');
-const app = express();
+import express from 'express';
+import mongoose from 'mongoose';
+import cors from 'cors';
+import dotenv from 'dotenv';
 
-// Middleware
-app.use(cors());                    // ------ Yeh line add karo
+import authRoutes from './routes/auth.js';
+import gameRoutes from './routes/game.js';
+import adminRoutes from './routes/admin.js';
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection (use your MONGODB_URI env variable)
-mongoose.connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.log('MongoDB Error:', err));
+// Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/game', gameRoutes);
+app.use('/api/admin', adminRoutes);
 
-// Example route (remove if you already have your API)
-app.get('/', (req, res) => res.send('API Running!'));
+app.get('/', (req, res) => res.send('Betwin API live!'));
 
-// Baaki aapke auth, bet, wallet routes yahan hi rakho
-// Example: app.post('/api/auth/register', ...)
-
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+// Connect DB and start server
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+.then(() => {
+    app.listen(8080, () => {
+        console.log('Server (8080) and MongoDB connected!');
+    });
+})
+.catch((err) => console.error('MongoDB error:', err));
