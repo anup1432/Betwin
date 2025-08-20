@@ -1,121 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Prediction Demo with Bots & Leaderboard</title>
-  <style>
-    body { background:#161b28; color:#fff; font-family:'Segoe UI',Arial,sans-serif; margin:0;}
-    .main-container { width:370px; margin:1rem auto;}
-    .header { display:flex; align-items:center; margin-bottom:10px;}
-    .timer { margin:12px auto 0 auto;width:70px;height:70px;border-radius:50%;border:9px solid #dd34a7; display:flex;justify-content:center;align-items:center;font-size:2rem;font-weight:700;background:#23273a;}
-    .pricechart { background: #22293c; height:186px; border-radius:12px; margin:8px 0; position:relative;}
-    .status-label { background:#fbf515; color:#232325; padding:3px 8px; border-radius:5px; font-size:0.96em; font-weight:700; position:absolute; top:45px; right:14px;}
-    .statsbar{display:flex;justify-content:space-between;margin:7px 0 0 0;font-size:1em;}
-    .bot-row,.player-row{display:flex;gap:5px;align-items:center;margin-top:8px;margin-bottom:14px;}
-    .bot-avatar{ width:29px; height:29px; border-radius:50%; border:2.5px solid #fff;background:#383e55;}
-    .bot-username{ font-size:0.77em;text-align:center;margin-top:1px;color:#adadad;font-weight:600;}
-    .chip-row button{margin:0 3px;padding:9px 14px;background:#23273a;color:#86f7f6;border-radius:7px;border:none;font-weight:bold;}
-    .bet-btns button{font-size:1.25rem;padding:11px 0;width:47%;margin:8px 1%;border-radius:7px;border:none;}
-    .bet-up{background:#1ffba2;color:#191919;font-weight:700;}
-    .bet-down{background:#fb3b3b;color:#fff;font-weight:700;}
-    .mid-section {margin:13px 0;padding:10px 10px;background:#262d3f;border-radius:11px;}
-    .section-title{font-weight:700;margin-bottom:6px;font-size:1.09em;}
-    .history-section{margin-top:19px;}
-    .history-table{width:100%;background:#23293c;border-radius:7px;}
-    .history-table th, .history-table td{padding:9px 8px;font-size:0.97em;}
-    .history-table th{color:#ffcc51;}
-    .leaderboard-section{margin-top:15px;}
-    .lb-table{width:100%;background:#2a3155;border-radius:7px;font-size:0.97em; }
-    .lb-table th, .lb-table td{padding:7px 7px;}
-    .lb-table th{color:#eac94a;}
-    .betting-summary{background:#27315c;padding:6px 10px;border-radius:7px;}
-    .label-green{color:#53ffbe;font-weight:700;}
-    .label-red{color:#fb3b3b;font-weight:700;}
-    .curr-bet-row{ display:flex; gap:14px;}
-  </style>
+  <title>Market Battle Demo</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div class="main-container">
-    <div class="header">
-      <span style="font-size:1.5em;font-weight:700;color:#fa3;">CRYPTO GAME</span>
-      <span style="margin-left:auto;">☰</span>
-    </div>
-    
-    <div class="statsbar">
-      <span class="label-green">Up Wins $1</span>
-      <span class="label-red">Down Wins $1</span>
-    </div>
-    <div class="pricechart">
-      <span class="status-label">Live<br>117,678.82</span>
-      <div style="text-align:center;opacity:0.2;font-size:2.1rem;padding-top:70px;">📈</div>
-    </div>
-    <div class="timer">8</div>
-    
-    <!-- Real-Looking Bot Avatars Row -->
-    <div class="bot-row">
-      <span class="section-title" style="margin-right:7px;">Players :</span>
-      <div>
-        <img src="https://randomuser.me/api/portraits/men/32.jpg" class="bot-avatar"/>
-        <div class="bot-username">Alex</div>
-      </div>
-      <div>
-        <img src="https://randomuser.me/api/portraits/women/45.jpg" class="bot-avatar"/>
-        <div class="bot-username">Mina</div>
-      </div>
-      <div>
-        <img src="https://randomuser.me/api/portraits/men/70.jpg" class="bot-avatar"/>
-        <div class="bot-username">BotX</div>
-      </div>
-      <div>
-        <img src="https://randomuser.me/api/portraits/women/18.jpg" class="bot-avatar"/>
-        <div class="bot-username">Riya</div>
-      </div>
-    </div>
-    
-    <!-- Current Bets Summary -->
-    <div class="mid-section">
-      <div class="section-title">Current Bets (Live)</div>
-      <div class="curr-bet-row">
-        <span class="label-green">UP: 12 players ($120)</span>
-        <span class="label-red">DOWN: 9 players ($94)</span>
-      </div>
-    </div>
-    
-    <!-- BET CONTROLS -->
-    <div class="mid-section">
-      <div class="section-title">Place Your Bet</div>
-      <div>
-        <div class="chip-row">
-          <button>$5</button><button>$10</button><button>$20</button><button>$50</button>
-        </div>
-        <div class="bet-btns">
-          <button class="bet-up">Up</button>
-          <button class="bet-down">Down</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- LEADERBOARD -->
-    <div class="leaderboard-section">
-      <div class="section-title">Leaderboard</div>
-      <table class="lb-table">
-        <tr><th>Rank</th><th>Player</th><th>Winnings</th></tr>
-        <tr><td>#1</td><td><img src="https://randomuser.me/api/portraits/men/32.jpg" class="bot-avatar" style="margin-right:4px;">Alex</td><td>$1320</td></tr>
-        <tr><td>#2</td><td><img src="https://randomuser.me/api/portraits/men/70.jpg" class="bot-avatar" style="margin-right:4px;">BotX</td><td>$1074</td></tr>
-        <tr><td>#3</td><td><img src="https://randomuser.me/api/portraits/women/45.jpg" class="bot-avatar" style="margin-right:4px;">Mina</td><td>$1002</td></tr>
-      </table>
-    </div>
-    
-    <!-- HISTORY -->
-    <div class="history-section">
-      <div class="section-title">History</div>
-      <table class="history-table">
-        <tr><th>Time</th><th>Type</th><th>Amount</th><th>Price</th></tr>
-        <tr><td>08:18:46</td><td style="color:#fb3b3b;">DOWN</td><td>$20</td><td>117,700.25</td></tr>
-        <tr><td>08:17:43</td><td style="color:#53ffbe;">UP</td><td>$15</td><td>117,715.00</td></tr>
-      </table>
-    </div>
+  <div class="header">
+    <h2>Market Battle</h2>
+    <div>Balance: $<span id="bal">100</span></div>
+    <button id="connectWallet">Connect Wallet</button>
   </div>
+  <div class="market-container">
+    <div class="phase" id="phase">Betting Phase (00:20)</div>
+    <canvas id="priceChart" width="400" height="120"></canvas>
+    <div>
+      <button onclick="predict('up')">UP</button>
+      <button onclick="predict('down')">DOWN</button>
+    </div>
+    <div id="roundStats"></div>
+  </div>
+  <div id="historyPanel"></div>
+  <script src="market-battle.js"></script>
 </body>
 </html>
+
 
