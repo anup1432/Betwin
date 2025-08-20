@@ -338,7 +338,19 @@ window.onload = function() {
 };
 </script>
 </body>
+    <!-- Paste this as the LAST <script> tag above </body> in index.html -->
+<script>
+window.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var el = document.getElementById('loadingScreen');
+    if (el) el.style.display = 'none';
+    else alert("No element with id='loadingScreen' found!");
+  }, 2000);
+});
+</script>
+</body>
 </html>
+
 
   </html>
   
