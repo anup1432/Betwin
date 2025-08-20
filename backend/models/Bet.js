@@ -1,9 +1,12 @@
-const mongoose = require('mongoose');
-const BetSchema = new mongoose.Schema({
-  userId: String,
+import mongoose from "mongoose";
+
+const betSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  round: { type: mongoose.Schema.Types.ObjectId, ref: 'Round' },
+  direction: String,
   amount: Number,
-  side: String, // 'up' or 'down'
-  result: String,
+  isBot: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });
-module.exports = mongoose.model('Bet', BetSchema);
+
+export default mongoose.model('Bet', betSchema);
