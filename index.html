@@ -1,29 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <title>Market Battle Demo</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <link rel="stylesheet" href="style.css"/>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-  <div class="header">
-    <h2>Market Battle</h2>
-    <div>Balance: $<span id="bal">100</span></div>
-    <button id="connectWallet">Connect Wallet</button>
-  </div>
-  <div class="market-container">
-    <div class="phase" id="phase">Betting Phase (00:20)</div>
-    <canvas id="priceChart" width="400" height="120"></canvas>
-    <div>
-      <button onclick="predict('up')">UP</button>
-      <button onclick="predict('down')">DOWN</button>
-    </div>
-    <div id="roundStats"></div>
-  </div>
-  <div id="historyPanel"></div>
-  <script src="market-battle.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Market Battle</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>window.API_BASE = localStorage.getItem('API_BASE') || 'https://your-backend.onrender.com';</script>
+    <script src="app.js"></script>
+  </body>
 </html>
-
-
