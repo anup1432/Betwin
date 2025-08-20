@@ -1,5 +1,11 @@
 // BETWIN - Crypto Prediction Game (GitHub + Firebase)
 // Author: Anup1432
+window.onload = function() {
+  setTimeout(() => {
+    document.getElementById("loadingScreen").style.display = "none";
+  }, 1500);
+  // ...rest old code...
+};
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import {
