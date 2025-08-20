@@ -1,9 +1,12 @@
-const mongoose = require('mongoose');
-const TransactionSchema = new mongoose.Schema({
-  userId: String,
-  type: String,
+import mongoose from "mongoose";
+
+const transactionSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  type: String, // deposit | withdraw
   amount: Number,
-  status: String,
+  address: String,
+  status: { type: String, default: "pending" }, // approved/declined
   createdAt: { type: Date, default: Date.now }
 });
-module.exports = mongoose.model('Transaction', TransactionSchema);
+
+export default mongoose.model('Transaction', transactionSchema);
