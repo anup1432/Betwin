@@ -1,25 +1,32 @@
-import express from 'express';
-import cors from 'cors';
-import { cfg } from './config.js';
-import { connectDB } from './db.js';
-import { auth } from './routes/auth.js';
-import { battles } from './routes/battles.js';
-import { admin } from './routes/admin.js';
-import { wallet } from './routes/wallet.js';
+import express from "express";
+import cors from "cors";
+import connectDB from "./db.js";
+
+import authRoutes from "./routes/auth.js";
+import battleRoutes from "./routes/battles.js";
+import adminRoutes from "./routes/admin.js";
+import walletRoutes from "./routes/wallet.js";
 
 const app = express();
+
+// Middleware
 app.use(express.json());
-app.use(cors({ origin: cfg.CORS_ORIGIN }));
+app.use(cors());
 
-app.get('/api/health', (req,res)=>res.json({ ok:true, telegram: cfg.TELEGRAM_LINK }));
+// Connect Database
+connectDB();
 
-app.use('/api/auth', auth);
-app.use('/api/battles', battles);
-app.use('/api/admin', admin);
-app.use('/api/wallet', wallet);
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/battles", battleRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/wallet", walletRoutes);
 
-const start = async ()=>{
-  await connectDB();
-  app.listen(cfg.PORT, ()=>console.log('API on :' + cfg.PORT));
-};
-start();
+// Default route
+app.get("/", (req, res) => {
+  res.send("✅ BetWin Backend Running...");
+});
+
+// Start Server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
