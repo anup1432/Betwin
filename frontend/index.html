@@ -1,78 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>BetWin Game</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0; padding: 0;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: flex-start;
-      background: #111; color: #f1f1f1;
-      min-height: 100vh;
-    }
-    h1 { margin: 20px 0; color: #00ffcc; }
-    .container {
-      width: 90%; max-width: 500px;
-      background: #1e1e1e; padding: 20px;
-      border-radius: 12px; box-shadow: 0 0 12px rgba(0,0,0,0.5);
-      margin-bottom: 20px;
-    }
-    label { display: block; margin: 10px 0 5px; }
-    input, select, button {
-      width: 100%; padding: 10px; margin-bottom: 12px;
-      border-radius: 8px; border: none; outline: none;
-      font-size: 16px;
-    }
-    button {
-      background: #00ffcc; color: #000; cursor: pointer;
-      font-weight: bold;
-    }
-    button:hover { background: #00cca3; }
-    ul { list-style: none; padding: 0; }
-    li {
-      background: #2a2a2a; margin: 6px 0;
-      padding: 10px; border-radius: 6px;
-    }
-    .message { font-size: 14px; margin: 8px 0; color: #ffcc00; }
-  </style>
+  <link rel="stylesheet" href="style.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>🎲 BetWin Game</h1>
+  <header>
+    <h1>🎲 BetWin - Prediction Game</h1>
+  </header>
 
-  <!-- User Section -->
-  <div class="container">
-    <h2>Create User</h2>
-    <label for="username">Username</label>
-    <input type="text" id="username" placeholder="Enter username" />
-    <button onclick="createUser()">Create User</button>
-    <p id="user-message" class="message"></p>
-  </div>
+  <main>
+    <!-- User Section -->
+    <section id="user-section">
+      <h2>👤 User</h2>
+      <input type="text" id="username" placeholder="Enter Username">
+      <button onclick="createUser()">Create User</button>
+      <p id="user-message"></p>
+      <p><strong>Balance:</strong> <span id="balance">0</span> USDT</p>
+      <div id="avatar"></div>
+    </section>
 
-  <!-- Bet Section -->
-  <div class="container">
-    <h2>Place Bet</h2>
-    <label for="amount">Amount</label>
-    <input type="number" id="amount" placeholder="Enter amount" />
+    <!-- Wallet Section -->
+    <section id="wallet-section">
+      <h2>💰 Wallet</h2>
+      <button onclick="deposit()">Deposit</button>
+      <button onclick="withdraw()">Withdraw</button>
+    </section>
 
-    <label for="bet-type">Type</label>
-    <select id="bet-type">
-      <option value="up">Up 📈</option>
-      <option value="down">Down 📉</option>
-    </select>
+    <!-- Graph Section -->
+    <section id="graph-section">
+      <h2>📈 Live Market Graph</h2>
+      <canvas id="graph"></canvas>
+    </section>
 
-    <button onclick="placeBet()">Place Bet</button>
-    <p id="bet-message" class="message"></p>
-  </div>
+    <!-- Betting Section -->
+    <section id="bet-section">
+      <h2>🎯 Place Bet</h2>
+      <input type="number" id="amount" placeholder="Enter Amount">
+      <select id="bet-type">
+        <option value="up">UP</option>
+        <option value="down">DOWN</option>
+      </select>
+      <button onclick="placeBet()">Place Bet</button>
+      <p id="bet-message"></p>
+    </section>
 
-  <!-- Results Section -->
-  <div class="container">
-    <h2>Results</h2>
-    <button onclick="getResults()">Refresh Results</button>
-    <ul id="results-list"></ul>
-  </div>
+    <!-- Results Section -->
+    <section id="results-section">
+      <h2>📜 Recent Bets</h2>
+      <ul id="results-list"></ul>
+    </section>
+
+    <!-- Bots Section -->
+    <section id="bots-section">
+      <h2>🤖 Bots Playing</h2>
+      <ul id="bots-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>© 2025 BetWin Game</p>
+  </footer>
 
   <script src="script.js"></script>
 </body>
