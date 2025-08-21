@@ -4,7 +4,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const app = express();
-app.use(express.json()); // JSON body support
+app.use(express.json());
 
 // Port setup (Render sets PORT automatically)
 const PORT = process.env.PORT || 3000;
@@ -22,7 +22,7 @@ mongoose.connect(mongoURI, {
     process.exit(1); // Exit if DB connection fails
 });
 
-// Simple test route
+// Test route
 app.get('/', (req, res) => {
     res.send('Server is running!');
 });
