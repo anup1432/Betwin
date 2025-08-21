@@ -16,7 +16,7 @@ function createUser() {
         currentUserId = data._id;
         document.getElementById("user-message").innerText = `User created! ID: ${currentUserId}`;
     })
-    .catch(err => console.error(err));
+    .catch(err => console.error("❌ Create User Error:", err));
 }
 
 // Place Bet
@@ -36,7 +36,7 @@ function placeBet() {
         document.getElementById("bet-message").innerText = `Bet placed! Result: ${data.result || "Pending"}`;
         getResults(); // Refresh results automatically
     })
-    .catch(err => console.error(err));
+    .catch(err => console.error("❌ Place Bet Error:", err));
 }
 
 // Get Results
@@ -48,9 +48,13 @@ function getResults() {
         list.innerHTML = "";
         data.forEach(bet => {
             const li = document.createElement("li");
-            li.innerText = `User: ${bet.userId}, Amount: ${bet.amount}, Type: ${bet.type}, Result: ${bet.result || "Pending"}`;
+
+            // Agar populate hua hai to username nikaalo, warna ID dikhao
+            const username = bet.userId?.username || bet.userId;
+
+            li.innerText = `User: ${username}, Amount: ${bet.amount}, Type: ${bet.type}, Result: ${bet.result || "Pending"}`;
             list.appendChild(li);
         });
     })
-    .catch(err => console.error(err));
+    .catch(err => console.error("❌ Get Results Error:", err));
 }
