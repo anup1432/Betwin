@@ -1,5 +1,6 @@
 const API_BASE = "https://betwin-winn.onrender.com"; // Backend URL
 let currentUser = null;
+let chart; // Chart.js instance
 
 // Create User
 function createUser() {
@@ -79,3 +80,53 @@ setInterval(() => {
         list.appendChild(li);
     });
 }, 3000);
+
+// -------- GRAPH LOGIC --------
+function initGraph() {
+    const ctx = document.getElementById("graph").getContext("2d");
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: "Market Price",
+                data: [],
+                borderColor: "#00ff00",
+                borderWidth: 2,
+                fill: false,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            animation: false,
+            scales: {
+                x: { display: false },
+                y: { beginAtZero: false }
+            }
+        }
+    });
+}
+
+// Live graph update
+function updateGraph() {
+    if (!chart) return;
+
+    const time = new Date().toLocaleTimeString();
+    const value = Math.floor(Math.random() * 100) + 50; // fake price 50-150
+
+    chart.data.labels.push(time);
+    chart.data.datasets[0].data.push(value);
+
+    if (chart.data.labels.length > 20) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+    }
+
+    chart.update();
+}
+
+window.onload = () => {
+    initGraph();
+    setInterval(updateGraph, 2000);
+};
