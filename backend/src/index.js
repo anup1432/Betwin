@@ -1,25 +1,22 @@
-import express from 'express';
-import cors from 'cors';
-import { cfg } from './config.js';
-import { connectDB } from './db.js';
-import { auth } from './routes/auth.js';
-import { battles } from './routes/battles.js';
-import { admin } from './routes/admin.js';
-import { wallet } from './routes/wallet.js';
+import express from "express";
+import cors from "cors";
+import auth from "./routes/auth.js";   // auth route import
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use(cors({ origin: cfg.CORS_ORIGIN }));
 
-app.get('/api/health', (req,res)=>res.json({ ok:true, telegram: cfg.TELEGRAM_LINK }));
+// Routes
+app.use("/auth", auth);
 
-app.use('/api/auth', auth);
-app.use('/api/battles', battles);
-app.use('/api/admin', admin);
-app.use('/api/wallet', wallet);
+// Default route
+app.get("/", (req, res) => {
+  res.send("Server is running 🚀");
+});
 
-const start = async ()=>{
-  await connectDB();
-  app.listen(cfg.PORT, ()=>console.log('API on :' + cfg.PORT));
-};
-start();
+app.listen(PORT, () => {
+  console.log(`✅ Server started on port ${PORT}`);
+});
