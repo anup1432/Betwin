@@ -1,38 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Betwin Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BetWin Game</title>
 </head>
 <body>
-    <h1>Betwin Game</h1>
+  <h2>🎰 BetWin Game</h2>
 
-    <div id="user-section">
-        <h2>Create User</h2>
-        <input type="text" id="username" placeholder="Username">
-        <button onclick="createUser()">Create</button>
-        <p id="user-message"></p>
-    </div>
+  <div>
+    <input type="text" id="username" placeholder="Enter username">
+    <button onclick="createUser()">Create User</button>
+    <p id="user-message"></p>
+  </div>
 
-    <div id="bet-section" style="margin-top:20px;">
-        <h2>Place Bet</h2>
-        <input type="number" id="amount" placeholder="Amount">
-        <select id="bet-type">
-            <option value="up">UP</option>
-            <option value="down">DOWN</option>
-        </select>
-        <button onclick="placeBet()">Place Bet</button>
-        <p id="bet-message"></p>
-    </div>
+  <hr>
 
-    <div id="results-section" style="margin-top:20px;">
-        <h2>Results</h2>
-        <button onclick="getResults()">Refresh</button>
-        <ul id="results-list"></ul>
-    </div>
+  <div>
+    <input type="number" id="amount" placeholder="Bet Amount">
+    <select id="bet-type">
+      <option value="up">Up</option>
+      <option value="down">Down</option>
+    </select>
+    <button onclick="placeBet()">Place Bet</button>
+    <p id="bet-message"></p>
+  </div>
 
-    <script src="script.js"></script>
+  <hr>
+
+  <h3>📊 Bets Results</h3>
+  <ul id="results-list"></ul>
+
+  <script src="script.js"></script>
 </body>
 </html>
