@@ -1,81 +1,81 @@
-const API_BASE = "https://betwin-winn.onrender.com"; // ✅ Backend URL
-let currentUserId = null;
+const API_BASE = "https://betwin-winn.onrender.com"; // Backend URL
+let currentUser = null;
 
-// 🟢 Create User
+// Create User
 function createUser() {
-    const username = document.getElementById("username").value.trim();
-    if (!username) {
-        alert("Please enter a username");
-        return;
-    }
+    const username = document.getElementById("username").value;
+    if (!username) return alert("Enter username");
 
-    fetch(`${API_BASE}/users`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data._id) {
-            currentUserId = data._id;
-            document.getElementById("user-message").innerText = `✅ User created! ID: ${currentUserId}`;
-        } else {
-            document.getElementById("user-message").innerText = `⚠️ Error creating user`;
-        }
-    })
-    .catch(err => {
-        console.error("Create User Error:", err);
-        alert("Failed to create user. Please try again.");
-    });
+    currentUser = {
+        id: Math.floor(Math.random() * 10000),
+        username,
+        balance: 100,
+        avatar: `https://api.dicebear.com/6.x/pixel-art/svg?seed=${username}`
+    };
+
+    document.getElementById("user-message").innerText = `Welcome ${currentUser.username}`;
+    document.getElementById("balance").innerText = currentUser.balance;
+    document.getElementById("avatar").innerHTML = `<img src="${currentUser.avatar}" width="80">`;
 }
 
-// 🟢 Place Bet
+// Place Bet
 function placeBet() {
-    if (!currentUserId) {
-        alert("Please create a user first");
-        return;
-    }
+    if (!currentUser) return alert("Create a user first");
 
-    const amount = document.getElementById("amount").value.trim();
+    const amount = parseInt(document.getElementById("amount").value);
     const type = document.getElementById("bet-type").value;
+    if (!amount || amount <= 0) return alert("Enter valid amount");
 
-    if (!amount || isNaN(amount)) {
-        alert("Enter a valid amount");
-        return;
-    }
+    if (amount > currentUser.balance) return alert("Insufficient balance");
 
-    fetch(`${API_BASE}/bets`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: currentUserId, amount, type })
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("bet-message").innerText =
-            `🎲 Bet placed! Result: ${data.result || "Pending"}`;
-        getResults(); // Refresh results automatically
-    })
-    .catch(err => {
-        console.error("Place Bet Error:", err);
-        alert("Failed to place bet. Please try again.");
-    });
+    currentUser.balance -= amount;
+    document.getElementById("balance").innerText = currentUser.balance;
+
+    // Fake result
+    const result = Math.random() > 0.5 ? "Win" : "Lose";
+    if (result === "Win") currentUser.balance += amount * 2;
+
+    document.getElementById("balance").innerText = currentUser.balance;
+    document.getElementById("bet-message").innerText = `You ${result} the bet!`;
+
+    addResult(currentUser.username, amount, type, result);
 }
 
-// 🟢 Get Results
-function getResults() {
-    fetch(`${API_BASE}/bets`)
-    .then(res => res.json())
-    .then(data => {
-        const list = document.getElementById("results-list");
-        list.innerHTML = "";
-        data.forEach(bet => {
-            const li = document.createElement("li");
-            li.innerText = `👤 User: ${bet.userId}, 💰 Amount: ${bet.amount}, 🎯 Type: ${bet.type}, 🏆 Result: ${bet.result || "Pending"}`;
-            list.appendChild(li);
-        });
-    })
-    .catch(err => {
-        console.error("Get Results Error:", err);
-        alert("Failed to fetch results.");
-    });
+// Add result to list
+function addResult(user, amount, type, result) {
+    const list = document.getElementById("results-list");
+    const li = document.createElement("li");
+    li.innerText = `User: ${user}, Amount: ${amount}, Type: ${type}, Result: ${result}`;
+    list.prepend(li);
 }
+
+// Deposit
+function deposit() {
+    if (!currentUser) return alert("Create a user first");
+    currentUser.balance += 50;
+    document.getElementById("balance").innerText = currentUser.balance;
+}
+
+// Withdraw
+function withdraw() {
+    if (!currentUser) return alert("Create a user first");
+    if (currentUser.balance < 50) return alert("Not enough balance");
+    currentUser.balance -= 50;
+    document.getElementById("balance").innerText = currentUser.balance;
+}
+
+// Bots Playing
+setInterval(() => {
+    const bots = ["Bot_A", "Bot_B", "Bot_C"];
+    const list = document.getElementById("bots-list");
+    list.innerHTML = "";
+    bots.forEach(bot => {
+        const amount = Math.floor(Math.random() * 100);
+        const type = Math.random() > 0.5 ? "UP" : "DOWN";
+        const result = Math.random() > 0.5 ? "Win" : "Lose";
+
+        const li = document.createElement("li");
+        li.innerText = `${bot} bet ${amount} on ${type} → ${result}`;
+        list.appendChild(li);
+    });
+}, 3000);
