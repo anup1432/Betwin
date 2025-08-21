@@ -1,14 +1,17 @@
-import jwt from 'jsonwebtoken';
-import { cfg } from '../config.js';
-export function requireUser(req, res, next) {
-  const header = req.headers['authorization'] || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
-  if (!token) return res.status(401).json({ error: 'No token' });
+import jwt from "jsonwebtoken";
+import cfg from "../config.js";
+
+const userAuth = (req, res, next) => {
   try {
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ error: "No token, auth denied" });
+
     const decoded = jwt.verify(token, cfg.JWT_SECRET);
-    req.user = decoded; // { id, username }
+    req.user = decoded;
     next();
-  } catch {
-    res.status(403).json({ error: 'Invalid token' });
+  } catch (error) {
+    return res.status(401).json({ error: "Token is not valid" });
   }
-}
+};
+
+export default userAuth;
