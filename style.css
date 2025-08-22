@@ -1,21 +1,58 @@
-
-/* Bots */
-#bots-list li {
-  list-style: none;
-  padding: 8px;
-  margin-bottom: 5px;
-  border-radius: 8px;
-  background: #21262d;
-  color: #ff6f61;
-  font-weight: bold;
+body {
+    font-family: Arial, sans-serif;
+    background: #f0f2f5;
+    margin: 0;
+    padding: 0;
 }
-
-/* Footer */
-footer {
-  margin-top: 30px;
-  text-align: center;
-  padding: 15px;
-  background: #161b22;
-  color: #aaa;
-  border-top: 2px solid #21262d;
+header {
+    background: #4a90e2;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+header nav a {
+    color: white;
+    margin: 0 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+main {
+    padding: 20px;
+    max-width: 800px;
+    margin: auto;
+}
+button {
+    padding: 10px 20px;
+    margin-right: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+}
+#three-doubt .doubt {
+    margin-bottom: 10px;
+}
+.toggle {
+    background: #4a90e2;
+    color: white;
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    font-size: 16px;
+}
+.answer {
+    display: none;
+    padding: 10px;
+    background: #e1f0ff;
+}
+#result {
+    margin-top: 10px;
+    font-weight: bold;
+    font-size: 18px;
+}
+canvas {
+    background: white;
+    border: 1px solid #ccc;
+    display: block;
+    margin-top: 10px;
 }
