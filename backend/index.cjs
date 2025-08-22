@@ -1,15 +1,14 @@
 // backend/index.cjs
 
-import express from "express";
-import mongoose from "mongoose";
-import cors from "cors";
-import dotenv from "dotenv";
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
 
-// Routes
-import authRoutes from "./routes/auth.js";
-import betRoutes from "./routes/bets.js";
-import botRoutes from "./routes/bots.js";
-import graphRoutes from "./routes/graph.js"; // ✅ NEW graph route
+const authRoutes = require("./routes/auth.cjs");
+const betRoutes = require("./routes/bets.cjs");
+const botRoutes = require("./routes/bots.cjs");
+const graphRoutes = require("./routes/graph.cjs"); // ✅ Graph route
 
 dotenv.config();
 
@@ -23,10 +22,10 @@ app.use(express.json());
 // MongoDB Connect
 mongoose.connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
-    useUnifiedTopology: true
+    useUnifiedTopology: true,
 })
 .then(() => console.log("✅ MongoDB connected"))
-.catch(err => console.error("❌ MongoDB connection error:", err));
+.catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // Routes
 app.use("/auth", authRoutes);
