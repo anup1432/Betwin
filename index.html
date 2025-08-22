@@ -1,59 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BetWin Game</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetWin Game</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <h1>BetWin Real Game</h1>
-    <div id="user-info">
-      <img id="avatar" src="" alt="Avatar" />
-      <span id="username-display">Guest</span> | Balance: $<span id="balance">0</span>
+    <h1>BetWin Game</h1>
+
+    <div id="user-section">
+        <h2>Create User</h2>
+        <input type="text" id="username" placeholder="Username">
+        <button onclick="createUser()">Create</button>
+        <p id="user-message"></p>
+        <p>Balance: <span id="balance">0</span></p>
     </div>
-  </header>
 
-  <main>
-    <section id="create-user">
-      <input type="text" id="username" placeholder="Enter username">
-      <button onclick="createUser()">Create User</button>
-      <p id="user-message"></p>
-    </section>
+    <div id="graph-section">
+        <h2>Price Graph</h2>
+        <canvas id="priceGraph" width="500" height="300"></canvas>
+    </div>
 
-    <section id="bet-section">
-      <h2>Place Bet</h2>
-      <input type="number" id="amount" placeholder="Amount">
-      <select id="bet-type">
-        <option value="up">UP</option>
-        <option value="down">DOWN</option>
-      </select>
-      <button onclick="placeBet()">Place Bet</button>
-      <p id="bet-message"></p>
-      <p>Round <span id="round-seq">0</span> | Phase: <span id="round-phase">-</span> | Countdown: <span id="countdown">0</span>s</p>
-    </section>
+    <div id="bet-section">
+        <h2>Place Bet</h2>
+        <input type="number" id="amount" placeholder="Amount">
+        <select id="bet-type">
+            <option value="up">UP</option>
+            <option value="down">DOWN</option>
+        </select>
+        <button onclick="placeBet()">Place Bet</button>
+        <p id="bet-message"></p>
+        <p>Next round in: <span id="countdown">--</span> s</p>
+    </div>
 
-    <section id="graph-section">
-      <h2>Price Graph</h2>
-      <canvas id="graph-canvas" width="600" height="300"></canvas>
-    </section>
+    <div id="results-section">
+        <h2>Recent Bets</h2>
+        <ul id="results-list"></ul>
+    </div>
 
-    <section id="recent-bets">
-      <h2>Recent Bets</h2>
-      <ul id="bets-list"></ul>
-    </section>
-
-    <section id="wallet-section">
-      <h2>Wallet</h2>
-      <input type="number" id="deposit-amount" placeholder="Deposit Amount">
-      <button onclick="deposit()">Deposit</button>
-      <input type="number" id="withdraw-amount" placeholder="Withdraw Amount">
-      <button onclick="withdraw()">Withdraw</button>
-      <p id="wallet-message"></p>
-    </section>
-  </main>
-
-  <script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
