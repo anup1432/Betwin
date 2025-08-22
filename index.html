@@ -3,43 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetWin Game</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>BetWin Crypto Prediction Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #4a90e2;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        header nav a {
+            color: white;
+            margin: 0 10px;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: auto;
+        }
+        .buttons {
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            margin-right: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        #three-doubt .doubt {
+            margin-bottom: 10px;
+        }
+        .toggle {
+            background: #4a90e2;
+            color: white;
+            width: 100%;
+            text-align: left;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .answer {
+            display: none;
+            padding: 10px;
+            background: #e1f0ff;
+        }
+        #result {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        canvas {
+            background: white;
+            border: 1px solid #ccc;
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-    <h1>BetWin Game</h1>
+    <header>
+        <h1>BetWin Crypto Prediction Game</h1>
+        <nav>
+            <a href="#">Login</a>
+            <a href="#">Admin</a>
+        </nav>
+    </header>
 
-    <div id="user-section">
-        <h2>Create User</h2>
-        <input type="text" id="username" placeholder="Username">
-        <button onclick="createUser()">Create</button>
-        <p id="user-message"></p>
-        <p>Balance: <span id="balance">0</span></p>
-    </div>
+    <main>
+        <section id="game-section">
+            <h2>Predict Crypto Price</h2>
+            <canvas id="cryptoGraph" width="600" height="300"></canvas>
+            <div class="buttons">
+                <button id="upBtn">Up</button>
+                <button id="downBtn">Down</button>
+            </div>
+            <div id="result"></div>
+        </section>
 
-    <div id="graph-section">
-        <h2>Price Graph</h2>
-        <canvas id="priceGraph" width="500" height="300"></canvas>
-    </div>
+        <section id="three-doubt">
+            <h2>Three Common Doubts</h2>
+            <div class="doubt">
+                <button class="toggle">How do I win?</button>
+                <p class="answer">Predict whether the price will go Up or Down. If correct, your balance increases.</p>
+            </div>
+            <div class="doubt">
+                <button class="toggle">Is it real money?</button>
+                <p class="answer">Yes, the balance is in USDT demo mode. Real payment integration can be added.</p>
+            </div>
+            <div class="doubt">
+                <button class="toggle">Can I withdraw?</button>
+                <p class="answer">Admin can approve deposits and withdrawals in the panel.</p>
+            </div>
+        </section>
+    </main>
 
-    <div id="bet-section">
-        <h2>Place Bet</h2>
-        <input type="number" id="amount" placeholder="Amount">
-        <select id="bet-type">
-            <option value="up">UP</option>
-            <option value="down">DOWN</option>
-        </select>
-        <button onclick="placeBet()">Place Bet</button>
-        <p id="bet-message"></p>
-        <p>Next round in: <span id="countdown">--</span> s</p>
-    </div>
+    <script>
+        // Fake graph simulation
+        const canvas = document.getElementById('cryptoGraph');
+        const ctx = canvas.getContext('2d');
 
-    <div id="results-section">
-        <h2>Recent Bets</h2>
-        <ul id="results-list"></ul>
-    </div>
+        let data = [];
+        let current = 150;
 
-    <script src="script.js"></script>
+        function generateGraph() {
+            data = [];
+            current = 150;
+            for (let i = 0; i < 50; i++) {
+                current += (Math.random() - 0.5) * 10;
+                data.push(current);
+            }
+            drawGraph();
+        }
+
+        function drawGraph() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - data[0]);
+            for (let i = 1; i < data.length; i++) {
+                ctx.lineTo((canvas.width / data.length) * i, canvas.height - data[i]);
+            }
+            ctx.strokeStyle = '#4a90e2';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Game logic
+        document.getElementById('upBtn').addEventListener('click', () => makePrediction('up'));
+        document.getElementById('downBtn').addEventListener('click', () => makePrediction('down'));
+
+        function makePrediction(choice) {
+            let last = data[data.length - 1];
+            let next = last + (Math.random() - 0.5) * 20;
+            let resultText = '';
+            if ((choice === 'up' && next > last) || (choice === 'down' && next < last)) {
+                resultText = 'You Win! +10 USDT';
+            } else {
+                resultText = 'You Lose! -10 USDT';
+            }
+            document.getElementById('result').innerText = resultText;
+            data.push(next);
+            if (data.length > 50) data.shift();
+            drawGraph();
+        }
+
+        // Three doubt toggle
+        document.querySelectorAll('.toggle').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const answer = btn.nextElementSibling;
+                answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+            });
+        });
+
+        generateGraph();
+    </script>
 </body>
 </html>
