@@ -4,76 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BetWin Crypto Prediction Game</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            margin: 0;
-            padding: 0;
-        }
-        header {
-            background: #4a90e2;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        header nav a {
-            color: white;
-            margin: 0 10px;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        main {
-            padding: 20px;
-            max-width: 800px;
-            margin: auto;
-        }
-        .buttons {
-            margin-top: 10px;
-        }
-        button {
-            padding: 10px 20px;
-            margin-right: 10px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            border-radius: 5px;
-        }
-        #three-doubt .doubt {
-            margin-bottom: 10px;
-        }
-        .toggle {
-            background: #4a90e2;
-            color: white;
-            width: 100%;
-            text-align: left;
-            padding: 10px;
-            font-size: 16px;
-        }
-        .answer {
-            display: none;
-            padding: 10px;
-            background: #e1f0ff;
-        }
-        #result {
-            margin-top: 10px;
-            font-weight: bold;
-            font-size: 18px;
-        }
-        canvas {
-            background: white;
-            border: 1px solid #ccc;
-            display: block;
-            margin-top: 10px;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header>
         <h1>BetWin Crypto Prediction Game</h1>
         <nav>
-            <a href="#">Login</a>
-            <a href="#">Admin</a>
+            <a href="login.html">Login</a>
+            <a href="admin.html">Admin</a>
         </nav>
     </header>
 
@@ -86,6 +24,13 @@
                 <button id="downBtn">Down</button>
             </div>
             <div id="result"></div>
+            <br>
+            <h3>Deposit / Withdraw</h3>
+            <input type="text" id="wallet" placeholder="Your Wallet Address">
+            <input type="number" id="amount" placeholder="Amount">
+            <button id="depositBtn">Deposit</button>
+            <button id="withdrawBtn">Withdraw</button>
+            <div id="walletResult"></div>
         </section>
 
         <section id="three-doubt">
@@ -96,73 +41,15 @@
             </div>
             <div class="doubt">
                 <button class="toggle">Is it real money?</button>
-                <p class="answer">Yes, the balance is in USDT demo mode. Real payment integration can be added.</p>
+                <p class="answer">Yes, balance is in USDT. Deposits and withdrawals go through blockchain wallet.</p>
             </div>
             <div class="doubt">
                 <button class="toggle">Can I withdraw?</button>
-                <p class="answer">Admin can approve deposits and withdrawals in the panel.</p>
+                <p class="answer">Admin approves deposits and withdrawals to your wallet address.</p>
             </div>
         </section>
     </main>
 
-    <script>
-        // Fake graph simulation
-        const canvas = document.getElementById('cryptoGraph');
-        const ctx = canvas.getContext('2d');
-
-        let data = [];
-        let current = 150;
-
-        function generateGraph() {
-            data = [];
-            current = 150;
-            for (let i = 0; i < 50; i++) {
-                current += (Math.random() - 0.5) * 10;
-                data.push(current);
-            }
-            drawGraph();
-        }
-
-        function drawGraph() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - data[0]);
-            for (let i = 1; i < data.length; i++) {
-                ctx.lineTo((canvas.width / data.length) * i, canvas.height - data[i]);
-            }
-            ctx.strokeStyle = '#4a90e2';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-        }
-
-        // Game logic
-        document.getElementById('upBtn').addEventListener('click', () => makePrediction('up'));
-        document.getElementById('downBtn').addEventListener('click', () => makePrediction('down'));
-
-        function makePrediction(choice) {
-            let last = data[data.length - 1];
-            let next = last + (Math.random() - 0.5) * 20;
-            let resultText = '';
-            if ((choice === 'up' && next > last) || (choice === 'down' && next < last)) {
-                resultText = 'You Win! +10 USDT';
-            } else {
-                resultText = 'You Lose! -10 USDT';
-            }
-            document.getElementById('result').innerText = resultText;
-            data.push(next);
-            if (data.length > 50) data.shift();
-            drawGraph();
-        }
-
-        // Three doubt toggle
-        document.querySelectorAll('.toggle').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const answer = btn.nextElementSibling;
-                answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
-            });
-        });
-
-        generateGraph();
-    </script>
+    <script src="main.js"></script>
 </body>
 </html>
