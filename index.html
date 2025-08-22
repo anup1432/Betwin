@@ -2,68 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BetWin Game</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <header>
-    <h1>🎲 BetWin - Prediction Game</h1>
+    <h1>BetWin Real Game</h1>
+    <div id="user-info">
+      <img id="avatar" src="" alt="Avatar" />
+      <span id="username-display">Guest</span> | Balance: $<span id="balance">0</span>
+    </div>
   </header>
 
   <main>
-    <!-- User Section -->
-    <section id="user-section">
-      <h2>👤 User</h2>
-      <input type="text" id="username" placeholder="Enter Username">
+    <section id="create-user">
+      <input type="text" id="username" placeholder="Enter username">
       <button onclick="createUser()">Create User</button>
       <p id="user-message"></p>
-      <p><strong>Balance:</strong> <span id="balance">0</span> USDT</p>
-      <div id="avatar"></div>
     </section>
 
-    <!-- Wallet Section -->
-    <section id="wallet-section">
-      <h2>💰 Wallet</h2>
-      <button onclick="deposit()">Deposit</button>
-      <button onclick="withdraw()">Withdraw</button>
-    </section>
-
-    <!-- Graph Section -->
-    <section id="graph-section">
-      <h2>📈 Live Market Graph</h2>
-      <canvas id="graph"></canvas>
-    </section>
-
-    <!-- Betting Section -->
     <section id="bet-section">
-      <h2>🎯 Place Bet</h2>
-      <input type="number" id="amount" placeholder="Enter Amount">
+      <h2>Place Bet</h2>
+      <input type="number" id="amount" placeholder="Amount">
       <select id="bet-type">
         <option value="up">UP</option>
         <option value="down">DOWN</option>
       </select>
       <button onclick="placeBet()">Place Bet</button>
       <p id="bet-message"></p>
+      <p>Round <span id="round-seq">0</span> | Phase: <span id="round-phase">-</span> | Countdown: <span id="countdown">0</span>s</p>
     </section>
 
-    <!-- Results Section -->
-    <section id="results-section">
-      <h2>📜 Recent Bets</h2>
-      <ul id="results-list"></ul>
+    <section id="graph-section">
+      <h2>Price Graph</h2>
+      <canvas id="graph-canvas" width="600" height="300"></canvas>
     </section>
 
-    <!-- Bots Section -->
-    <section id="bots-section">
-      <h2>🤖 Bots Playing</h2>
-      <ul id="bots-list"></ul>
+    <section id="recent-bets">
+      <h2>Recent Bets</h2>
+      <ul id="bets-list"></ul>
+    </section>
+
+    <section id="wallet-section">
+      <h2>Wallet</h2>
+      <input type="number" id="deposit-amount" placeholder="Deposit Amount">
+      <button onclick="deposit()">Deposit</button>
+      <input type="number" id="withdraw-amount" placeholder="Withdraw Amount">
+      <button onclick="withdraw()">Withdraw</button>
+      <p id="wallet-message"></p>
     </section>
   </main>
-
-  <footer>
-    <p>© 2025 BetWin Game</p>
-  </footer>
 
   <script src="script.js"></script>
 </body>
