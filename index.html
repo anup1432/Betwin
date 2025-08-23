@@ -1,52 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>BetWin – Crypto Prediction</title>
+  <meta charset="UTF-8">
+  <title>BetWin</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#0d1117;--panel:#111827;--border:#30363d;--text:#e5e7eb;--muted:#94a3b8;--up:#22c55e;--down:#ef4444}
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
-    header{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-    h1{margin:0;font-size:20px}
-    main{max-width:1000px;margin:18px auto;padding:0 14px;display:grid;gap:16px}
-    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .between{justify-content:space-between}
-    .balance{font-weight:700;font-size:16px}
-    .tag{font-size:12px;border:1px solid var(--border);padding:4px 8px;border-radius:999px;color:var(--muted)}
-    canvas{width:100%;max-width:860px;background:#0f172a;border:1px solid var(--border);border-radius:10px}
-    .btn{border:0;border-radius:10px;padding:8px 14px;font-weight:700;cursor:pointer;font-size:14px}
-    .btn-up{background:var(--up);color:#06280d}
-    .btn-down{background:var(--down);color:#fff}
-    .btn-ghost{background:#0b1220;color:var(--text);border:1px solid var(--border)}
-    .btn-mini{background:#22c55e;color:#fff;padding:4px 8px;font-size:12px}
-    .stat{font-size:14px;color:var(--muted)}
-    .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-    input,select{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none}
-    input::placeholder{color:#6b7280}
-    .label{font-size:12px;color:var(--muted);margin-bottom:4px}
-    .hr{height:1px;background:var(--border);margin:12px 0}
-    .qr{width:160px;height:160px;border:1px solid var(--border);border-radius:10px;background:#0b1220;object-fit:contain}
-    .faq .q{width:100%;text-align:left;background:#0b1220;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;cursor:pointer}
-    .faq .a{display:none;padding:10px 12px;background:#0f172a;border:1px solid var(--border);border-radius:8px}
-    .success{color:#4ade80}.error{color:#f87171}
-    .warn{color:#fbbf24;font-size:12px}
+    body {
+      margin: 0;
+      background: #111a2b;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    .navbar {
+      background: #1f2a40;
+      padding: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .balance {
+      font-size: 14px;
+    }
+    .plus-btn {
+      background: #28a745;
+      border: none;
+      padding: 2px 8px;
+      color: #fff;
+      cursor: pointer;
+      border-radius: 4px;
+      margin-left: 5px;
+    }
+    .menu {
+      position: relative;
+      display: inline-block;
+    }
+    .menu button {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .menu-content {
+      display: none;
+      position: absolute;
+      right: 0;
+      background: #2d3a55;
+      min-width: 120px;
+      border-radius: 5px;
+      z-index: 1;
+    }
+    .menu-content a {
+      color: white;
+      padding: 10px;
+      display: block;
+      text-decoration: none;
+    }
+    .menu-content a:hover {
+      background: #3a4a6a;
+    }
+    .menu:hover .menu-content {
+      display: block;
+    }
+    .chart-container {
+      width: 90%;
+      max-width: 800px;
+      margin: 30px auto;
+    }
   </style>
 </head>
 <body>
-<header>
-  <h1>BetWin – Crypto Game</h1>
-  <div class="row">
-    <button class="btn btn-ghost" onclick="deposit()">Deposit</button>
-    <button class="btn btn-ghost" onclick="withdraw()">Withdraw</button>
+  <div class="navbar">
+    <div><b>BetWin</b></div>
+    <div class="balance">Balance: $100 
+      <button class="plus-btn" onclick="addBalance()">+</button>
+    </div>
+    <div class="menu">
+      <button>⋮</button>
+      <div class="menu-content">
+        <a href="#">💰 Deposit</a>
+        <a href="#">💸 Withdraw</a>
+      </div>
+    </div>
   </div>
-</header>
 
-<main>
-  <!-- GAME -->
-  <section class="card">
-    <div class="row between">
-      <div class="balance">Balance: $<span id="balance">100</span>
+  <!-- Graph -->
+  <div class="chart-container">
+    <canvas id="gameChart"></canvas>
+  </div>
+
+  <script>
+    let balance = 100;
+
+    function addBalance() {
+      balance += 10;
+      document.querySelector(".balance").innerHTML = "Balance: $" + balance + 
+        ' <button class="plus-btn" onclick="addBalance()">+</button>';
+    }
+
+    // Chart.js Graph
+    const ctx = document.getElementById('gameChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [{
+          label: 'Market',
+          data: [],
+          borderColor: '#00ff99',
+          borderWidth: 2,
+          fill: false,
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        scales: {
+          x: { display: false },
+          y: { display: true }
+        }
+      }
+    });
+
+    // Live random graph
+    let x = 0;
+    setInterval(() => {
+      x++;
+      let y = Math.sin(x/10) * 10 + 50 + Math.random() * 5;
+      chart.data.labels.push(x);
+      chart.data.datasets[0].data.push(y);
+
+      if (chart.data.labels.length > 50) {
+        chart.data.labels.shift();
+        chart.data.datasets[0].data.shift();
+      }
+
+      chart.update();
+    }, 1000);
+  </script>
+</body>
+</html>
