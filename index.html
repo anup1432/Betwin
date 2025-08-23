@@ -3,72 +3,67 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BetWin - Prediction Game</title>
+  <title>BetWin Game</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
+      background: #0d1117;
+      color: #fff;
       font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
       text-align: center;
       padding: 20px;
     }
-    #gameChart {
+    canvas {
       max-width: 600px;
-      margin: auto;
-      background: #1e293b;
-      padding: 10px;
+      margin: 20px auto;
+      display: block;
+      background: #111;
+      border: 2px solid #444;
       border-radius: 10px;
     }
-    .buttons {
-      margin-top: 20px;
-    }
     button {
-      padding: 10px 20px;
       margin: 10px;
+      padding: 10px 20px;
       border: none;
       border-radius: 8px;
+      background: limegreen;
+      color: #fff;
+      font-size: 16px;
       cursor: pointer;
-      font-size: 18px;
-      font-weight: bold;
-      color: white;
     }
-    .up { background: green; }
-    .down { background: red; }
-    .balance {
-      margin-top: 20px;
-      font-size: 20px;
+    button:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
-  <h1>📈 BetWin Prediction Game</h1>
 
-  <!-- Graph -->
+  <h1>BetWin Crypto Game</h1>
   <canvas id="gameChart" width="400" height="200"></canvas>
+  <p>Balance: $<span id="balance"></span></p>
 
-  <!-- Buttons -->
-  <div class="buttons">
-    <button class="up" onclick="predict('up')">UP</button>
-    <button class="down" onclick="predict('down')">DOWN</button>
-  </div>
-
-  <!-- Balance -->
-  <div class="balance">Balance: $<span id="balance">100</span></div>
+  <button onclick="predict('up')">Predict UP 📈</button>
+  <button onclick="predict('down')">Predict DOWN 📉</button>
 
   <script>
     const ctx = document.getElementById('gameChart').getContext('2d');
 
-    // Local storage balance
+    // Balance system
     let balance = localStorage.getItem("balance") ? parseInt(localStorage.getItem("balance")) : 100;
     document.getElementById("balance").innerText = balance;
 
-    // Chart starting data
-    let labels = [];
-    let dataPoints = [];
-    for (let i = 0; i < 20; i++) {
-      labels.push(i.toString());
-      dataPoints.push(Math.floor(Math.random() * 100) + 50);
+    // Load saved graph data or create new
+    let savedData = JSON.parse(localStorage.getItem("graphData"));
+    let labels = savedData ? savedData.labels : [];
+    let dataPoints = savedData ? savedData.dataPoints : [];
+    let lastPrice = savedData ? savedData.lastPrice : 100;
+
+    if (labels.length === 0) {
+      for (let i = 0; i < 20; i++) {
+        labels.push(i.toString());
+        dataPoints.push(Math.floor(Math.random() * 100) + 50);
+      }
+      lastPrice = dataPoints[dataPoints.length - 1];
     }
 
     const gameChart = new Chart(ctx, {
@@ -94,7 +89,6 @@
     });
 
     // Graph update every second
-    let lastPrice = dataPoints[dataPoints.length - 1];
     setInterval(() => {
       labels.shift();
       dataPoints.shift();
@@ -103,9 +97,16 @@
       labels.push((parseInt(labels[labels.length - 1]) + 1).toString());
       dataPoints.push(lastPrice);
       gameChart.update();
+
+      // Save graph data to localStorage
+      localStorage.setItem("graphData", JSON.stringify({
+        labels: labels,
+        dataPoints: dataPoints,
+        lastPrice: lastPrice
+      }));
     }, 1000);
 
-    // Prediction
+    // Prediction system
     let currentPrediction = null;
     let predictedPrice = null;
 
@@ -119,7 +120,6 @@
       predictedPrice = lastPrice;
       alert("✅ Prediction placed: " + direction.toUpperCase());
 
-      // After 5 seconds check result
       setTimeout(() => {
         if ((direction === "up" && lastPrice > predictedPrice) ||
             (direction === "down" && lastPrice < predictedPrice)) {
@@ -135,5 +135,6 @@
       }, 5000);
     }
   </script>
+
 </body>
 </html>
