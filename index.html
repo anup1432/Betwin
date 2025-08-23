@@ -1,338 +1,477 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>TradeLive — User</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#071017;--card:#0e1620;--muted:#9aa7b2;--accent:#ff9800;--green:#00d27a;--red:#ff4d4f}
-    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#031018,#071017);font-family:Inter,system-ui;color:#e6eef3}
-    .wrap{max-width:1100px;margin:20px auto;padding:16px}
-    .top{display:flex;gap:12px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
-    .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 8px 24px rgba(3,6,10,0.6)}
-    .walletCard{display:flex;gap:10px;align-items:center;min-width:260px}
-    .addr{font-weight:700;word-break:break-all}
-    .btn{background:linear-gradient(180deg,var(--accent),#ffb86b);border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;color:#061018}
-    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
-    .three{display:flex;gap:10px;margin-bottom:14px}
-    .d{flex:1;padding:10px;border-radius:10px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.03))}
-    input,select{width:100%;padding:8px;border-radius:8px;border:none;margin-top:8px}
-    .graphCard{height:380px;padding:12px;border-radius:12px;position:relative}
-    canvas{width:100%!important;height:300px!important;display:block;border-radius:8px;background:transparent}
-    .floating{position:absolute;right:18px;top:18px;background:rgba(2,8,12,0.6);padding:8px 10px;border-radius:10px;font-weight:700}
-    .small{font-size:13px;color:var(--muted)}
-    .status-pill{padding:6px 8px;border-radius:8px;font-weight:700}
-    @media(max-width:900px){ .three{flex-direction:column} .top{flex-direction:column;align-items:stretch} }
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>TradeLive — Betting Game (Demo)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#06121a; --card:#0e1620; --muted:#9aa7b2;
+    --accent:#ff9800; --green:#00d27a; --red:#ff4d4f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;background:linear-gradient(180deg,#031018,#071017);color:#e9f2f7;font-family:Inter,system-ui;padding:14px}
+  .wrap{max-width:1100px;margin:0 auto}
+  header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+  .logo{display:flex;align-items:center;gap:10px}
+  .logo .box{width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:800;color:#061018}
+  h1{font-size:18px;margin:0}
+  .top-right{position:relative}
+  .three-dot{font-size:22px;cursor:pointer;padding:8px;border-radius:8px}
+  .menu{position:absolute;right:0;top:42px;background:var(--card);padding:12px;border-radius:10px;min-width:320px;box-shadow:0 10px 30px rgba(0,0,0,0.6);display:none}
+  .menu.show{display:block}
+  .menu .row{display:flex;gap:8px;align-items:center}
+  .menu small{color:var(--muted);display:block}
+  .menu input{width:100%;padding:8px;border-radius:8px;border:none;margin-top:8px}
+  .btn{background:linear-gradient(180deg,var(--accent),#ffb86b);color:#061018;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+  .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+  .grid{display:grid;grid-template-columns:1fr;gap:12px}
+  .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 8px 26px rgba(0,0,0,0.6)}
+  .graph{position:relative;height:360px;border-radius:10px;overflow:hidden}
+  canvas{width:100%!important;height:320px!important;background:transparent;display:block}
+  .floating{position:absolute;right:14px;top:14px;padding:8px 10px;border-radius:10px;background:rgba(2,8,12,0.6);font-weight:700}
+  .info-row{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
+  .pill{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.03));padding:8px 10px;border-radius:10px;min-width:100px;text-align:center}
+  /* Betting area */
+  .bet-area{display:flex;gap:10px;margin-top:12px}
+  .lane{flex:1;padding:14px;border-radius:10px;text-align:center;cursor:pointer;user-select:none}
+  .lane.up{background:linear-gradient(180deg,rgba(0,210,122,0.06),rgba(0,210,122,0.02));border:1px solid rgba(0,210,122,0.08)}
+  .lane.down{background:linear-gradient(180deg,rgba(255,77,79,0.04),rgba(255,77,79,0.02));border:1px solid rgba(255,77,79,0.06)}
+  .lane h3{margin:0 0 8px 0}
+  .controls{display:flex;gap:8px;align-items:center;justify-content:center;margin-top:10px}
+  .avatar{display:flex;align-items:center;gap:8px}
+  .avatar img{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,0.04)}
+  .ledger{margin-top:10px;background:rgba(0,0,0,0.04);padding:10px;border-radius:8px;font-size:13px;color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
+  @media(max-width:760px){ .bet-area{flex-direction:column} .menu{right:8px;left:8px} }
+</style>
 </head>
 <body>
   <div class="wrap">
-
-    <!-- TOP: Wallet + quick controls -->
-    <div class="top">
-      <div class="card walletCard" style="flex:1;min-width:320px">
-        <div style="flex:1">
-          <div class="small">Deposit Wallet</div>
-          <div id="walletAddress" class="addr">0xYourWalletHereABC123</div>
-          <div class="small" style="margin-top:6px">Tip: send payment then submit txn id below</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <button class="btn" id="copyBtn">Copy</button>
-          <button class="btn ghost" id="setWalletBtn">Change</button>
-        </div>
-      </div>
-
-      <div class="card" style="min-width:320px">
-        <div class="small">Your Latest Deposit</div>
-        <div id="yourDeposit" style="margin-top:8px;font-weight:700">No deposit submitted</div>
-        <div style="margin-top:8px"><small class="small">Status: <span id="yourStatus" class="status-pill">—</span></small></div>
-      </div>
-    </div>
-
-    <!-- Three Dought panels -->
-    <div class="three">
-      <div class="d card">
-        <div class="small">Deposit Request</div>
-        <input id="txnInput" placeholder="Paste transaction / Txn ID here" />
-        <button class="btn" id="submitTxn">Submit Txn</button>
-      </div>
-
-      <div class="d card">
-        <div class="small">Deposit History</div>
-        <div id="history" style="margin-top:8px;color:var(--muted)">No history yet</div>
-      </div>
-
-      <div class="d card">
-        <div class="small">Admin Info</div>
-        <div id="adminNote" style="margin-top:8px;color:var(--muted)">Deposits require admin approval</div>
-      </div>
-    </div>
-
-    <!-- Graph -->
-    <div class="card graphCard">
-      <canvas id="priceChart"></canvas>
-      <div class="floating" id="floatingPrice"><span id="priceArrow">▲</span>&nbsp;<span id="priceValue">$0.000</span></div>
-      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
-        <div class="small">Points: <span id="pointCount">0</span></div>
+    <header>
+      <div class="logo">
+        <div class="box">T</div>
         <div>
-          <button class="btn ghost" id="pauseBtn">Pause</button>
-          <button class="btn ghost" id="resumeBtn" style="opacity:.6">Resume</button>
+          <h1>TradeLive — Betting</h1>
+          <div class="small">20s betting • 5s result • bot plays every round</div>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <div class="three-dot" id="threeDot">⋮</div>
+        <div class="menu" id="menu">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <strong>Wallet & Deposit</strong>
+            <small class="small">Hidden here</small>
+          </div>
+
+          <div class="row">
+            <div style="flex:1">
+              <small>Deposit Wallet</small>
+              <div id="walletAddress" style="font-weight:700;margin-top:6px">0xYourWalletHereABC123</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-left:8px">
+              <button class="btn" id="copyBtn">Copy</button>
+              <button class="btn ghost" id="changeBtn">Change</button>
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <small>Submit Transaction ID</small>
+            <input id="txnInput" placeholder="Txn ID (paste after payment)" />
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn" id="submitTxn">Submit</button>
+              <button class="btn ghost" id="clearLocal">Clear Local</button>
+            </div>
+            <div class="small" style="margin-top:8px">Deposit status will show here after admin approval.</div>
+            <div id="depositStatus" class="ledger" style="margin-top:8px">No deposit</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="card graph">
+        <canvas id="priceChart"></canvas>
+        <div class="floating" id="floatingPrice"><span id="priceArrow">▲</span>&nbsp;<span id="priceValue">$0.000</span></div>
+
+        <div class="info-row">
+          <div class="pill">Round: <strong id="roundNum">0</strong></div>
+          <div class="pill">Phase: <strong id="phase">—</strong></div>
+          <div class="pill">Timer: <strong id="timer">—</strong></div>
+          <div class="pill">Players: <strong id="playersCount">1</strong></div>
+        </div>
+
+        <div class="bet-area" id="betArea">
+          <div class="lane up" id="laneUp">
+            <h3>UP</h3>
+            <div class="small">Place bets ↑</div>
+            <div id="upTotal" style="margin-top:8px;font-weight:700">0</div>
+          </div>
+          <div class="lane down" id="laneDown">
+            <h3>DOWN</h3>
+            <div class="small">Place bets ↓</div>
+            <div id="downTotal" style="margin-top:8px;font-weight:700">0</div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="avatar">
+              <img src="https://i.pravatar.cc/80?img=5" alt="bot" id="botAvatar">
+              <div>
+                <div style="font-weight:700" id="botName">BOT_A1</div>
+                <div class="small" id="botBetInfo">bot will bet each round</div>
+              </div>
+            </div>
+            <div style="margin-left:12px">
+              <input id="betAmount" placeholder="Bet amount" style="padding:8px;border-radius:8px;border:none;width:140px" />
+            </div>
+            <button class="btn" id="betUpBtn">Bet UP</button>
+            <button class="btn" id="betDownBtn">Bet DOWN</button>
+          </div>
+        </div>
+
+        <div class="ledger" id="ledger" style="margin-top:12px">
+          <div><strong>Your balance (demo):</strong> <span id="balance">1000</span></div>
+          <div class="small" style="margin-top:6px">Round results and recent bets are shown below.</div>
+          <div id="recent" style="margin-top:8px"></div>
         </div>
       </div>
     </div>
-
   </div>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script>
-  /* ---------------------------
-     CONFIG: change if needed
-     --------------------------- */
-  const API_BASE = '/api';               // backend prefix
-  const STORAGE_KEY = 'tradelive_price_points_v1';
-  const WALLET_KEY = 'tradelive_user_wallet';
-  const USER_TXNS_KEY = 'tradelive_user_txns'; // store user's submitted txns locally
-  const UPDATE_MS = 900;
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+/* -------------------------
+  Config & persistent keys
+------------------------- */
+const STORAGE_KEY = 'tradelive_price_points_v1';
+const TXNS_KEY = 'tradelive_deposits_v1';
+const BAL_KEY = 'tradelive_balance_v1';
+const UPDATE_MS = 700;      // chart update interval (ms) — lower for smoother
+const MAX_POINTS = 160;
 
-  /* ---------------------------
-     UI helpers
-     --------------------------- */
-  function el(id){return document.getElementById(id)}
-  function showToast(t){ alert(t) } // replace with fancy UI if you want
+/* -------------------------
+  UI references
+------------------------- */
+const el = id => document.getElementById(id);
+const menu = el('menu'), threeDot = el('threeDot');
+const walletEl = el('walletAddress'), copyBtn = el('copyBtn'), changeBtn = el('changeBtn');
+const txnInput = el('txnInput'), submitTxn = el('submitTxn'), depositStatus = el('depositStatus'), clearLocal = el('clearLocal');
 
-  /* ---------------------------
-     Wallet handling
-     --------------------------- */
-  const walletEl = el('walletAddress');
-  const copyBtn = el('copyBtn');
-  const setWalletBtn = el('setWalletBtn');
+const priceValue = el('priceValue'), priceArrow = el('priceArrow'), pointCount = el('pointCount');
+const roundNumEl = el('roundNum'), phaseEl = el('phase'), timerEl = el('timer');
+const laneUp = el('laneUp'), laneDown = el('laneDown'), upTotalEl = el('upTotal'), downTotalEl = el('downTotal');
+const betAmountInput = el('betAmount'), betUpBtn = el('betUpBtn'), betDownBtn = el('betDownBtn');
+const ledger = el('ledger'), balanceEl = el('balance'), recentEl = el('recent'), playersCountEl = el('playersCount');
+const botNameEl = el('botName'), botBetInfo = el('botBetInfo');
 
-  function loadWallet(){
-    const w = localStorage.getItem(WALLET_KEY) || walletEl.innerText;
-    walletEl.innerText = w;
+/* -------------------------
+  Three-dot menu toggle
+------------------------- */
+threeDot.addEventListener('click', ()=> menu.classList.toggle('show'));
+document.addEventListener('click', (e)=> { if(!threeDot.contains(e.target) && !menu.contains(e.target)) menu.classList.remove('show'); });
+
+/* -------------------------
+  Wallet & deposit (local demo)
+------------------------- */
+function loadWallet(){ walletEl.innerText = localStorage.getItem('tradelive_wallet') || walletEl.innerText; }
+loadWallet();
+
+copyBtn.addEventListener('click', async ()=>{
+  try{ await navigator.clipboard.writeText(walletEl.innerText); alert('Wallet copied'); } catch(e){ alert('Copy failed'); }
+});
+changeBtn.addEventListener('click', ()=> {
+  const v = prompt('Set deposit wallet:', walletEl.innerText);
+  if(v){ walletEl.innerText = v; localStorage.setItem('tradelive_wallet', v); }
+});
+
+submitTxn.addEventListener('click', ()=> {
+  const t = txnInput.value.trim();
+  if(!t) return alert('Enter txn id');
+  const arr = JSON.parse(localStorage.getItem(TXNS_KEY) || '[]');
+  arr.push({ id: 'local_'+Date.now(), txn: t, status: 'pending', ts: Date.now() });
+  localStorage.setItem(TXNS_KEY, JSON.stringify(arr));
+  depositStatus.innerText = 'Submitted (pending admin)';
+  txnInput.value = '';
+});
+clearLocal.addEventListener('click', ()=> {
+  if(confirm('Clear local deposits?')) { localStorage.removeItem(TXNS_KEY); depositStatus.innerText = 'No deposit'; }
+});
+/* For real app: POST /api/deposits and SSE/polling for status updates */
+
+/* -------------------------
+  Chart: persistent smooth generator
+------------------------- */
+const ctx = document.getElementById('priceChart').getContext('2d');
+
+function loadPoints(){
+  try{ const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+}
+function savePoints(arr){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }catch(e){} }
+
+let points = loadPoints() || (function seed(){
+  const start = 100 + Math.random()*6;
+  const a=[start];
+  for(let i=1;i<50;i++){ const last=a[a.length-1]; const change=(Math.random()-0.4)*1.0; a.push(Math.max(1, +(last+change).toFixed(3))); }
+  savePoints(a); return a;
+})();
+
+function makeGradient(up=true){
+  const g = ctx.createLinearGradient(0,0,0,320);
+  if(up){ g.addColorStop(0,'rgba(0,210,122,0.18)'); g.addColorStop(1,'rgba(0,210,122,0.02)'); }
+  else { g.addColorStop(0,'rgba(255,77,79,0.14)'); g.addColorStop(1,'rgba(255,77,79,0.02)'); }
+  return g;
+}
+
+const chart = new Chart(ctx, {
+  type:'line',
+  data:{ labels: points.map((_,i)=>i), datasets:[{
+    data: points,
+    borderWidth: 2.6,
+    borderColor: (points[points.length-1] >= points[points.length-2]) ? '#00d27a' : '#ff4d4f',
+    backgroundColor: makeGradient(points[points.length-1] >= points[points.length-2]),
+    fill: true,
+    tension: 0.36,
+    pointRadius: 0
+  }]},
+  options:{
+    animation:{duration:500,easing:'linear'},
+    plugins:{legend:{display:false},tooltip:{enabled:false}},
+    scales:{x:{display:false},y:{display:false}},
+    responsive:true, maintainAspectRatio:false
   }
-  loadWallet();
+});
 
-  copyBtn.addEventListener('click', async ()=>{
-    try{
-      await navigator.clipboard.writeText(walletEl.innerText);
-      showToast('Wallet copied');
-    }catch(e){ showToast('Copy failed') }
-  });
-  setWalletBtn.addEventListener('click', ()=>{
-    const val = prompt('Set deposit wallet address:', walletEl.innerText);
-    if(val){ walletEl.innerText = val; localStorage.setItem(WALLET_KEY,val); }
-  });
+function refreshChartUI(){
+  const last = points[points.length-1]; const prev = points.length>1?points[points.length-2]:last;
+  const up = last >= prev;
+  priceValue.innerText = '$' + (+last).toFixed(3);
+  priceArrow.innerText = up ? '▲' : '▼';
+  priceArrow.style.color = up ? 'var(--green)' : 'var(--red)';
+  pointCount && (pointCount.innerText = points.length);
+}
+refreshChartUI();
 
-  /* ---------------------------
-     Deposit submit + history
-     --------------------------- */
-  const txnInput = el('txnInput');
-  const submitBtn = el('submitTxn');
-  const historyEl = el('history');
-  const yourDepositEl = el('yourDeposit');
-  const yourStatusEl = el('yourStatus');
+function generateNextPrice(){
+  const last = points[points.length-1];
+  const drift = (Math.random()-0.52)*0.18;
+  const noise = (Math.random()-0.5)*0.45;
+  const spike = (Math.random()<0.025) ? (Math.random()*3 - 1.5) : 0;
+  return Math.max(0.01, +(last + drift + noise + spike).toFixed(3));
+}
 
-  function loadLocalTxns(){
-    try{
-      const raw = localStorage.getItem(USER_TXNS_KEY);
-      return raw ? JSON.parse(raw) : [];
-    }catch(e){ return [] }
+/* Continuous internal ticker for chart (no pause) */
+setInterval(()=>{
+  const next = generateNextPrice();
+  points.push(next);
+  if(points.length > MAX_POINTS) points.shift();
+  savePoints(points);
+  const up = points[points.length-1] >= points[points.length-2];
+  chart.data.labels = points.map((_,i)=>i);
+  chart.data.datasets[0].data = points;
+  chart.data.datasets[0].borderColor = up ? '#00d27a' : '#ff4d4f';
+  chart.data.datasets[0].backgroundColor = makeGradient(up);
+  chart.update('active');
+  refreshChartUI();
+}, UPDATE_MS);
+
+/* -------------------------
+  Betting game loop: 20s bet, 5s result
+------------------------- */
+let round = 0;
+let phase = 'idle'; // 'bet' or 'result'
+let timer = 0;
+let timerInterval;
+let roundState = {
+  bets: { up: [], down: [] }, // { who:'you'|'bot', amount, ts }
+  totals: { up:0, down:0 },
+  startPrice: null,
+  endPrice: null
+};
+
+/* Demo player */
+let balance = Number(localStorage.getItem(BAL_KEY) || 1000);
+balanceEl.innerText = balance;
+
+/* recent results */
+let recent = JSON.parse(localStorage.getItem('tradelive_recent') || '[]');
+
+function renderRecent(){
+  recentEl.innerHTML = recent.slice().reverse().map(r=>`<div style="margin-bottom:6px"><strong>${r.result.toUpperCase()}</strong> • Round ${r.round} • Payout: ${r.payout}</div>`).join('') || '<div class="small">No rounds yet</div>';
+}
+renderRecent();
+
+/* Bot settings */
+const bot = { name: 'BOT_A1', balance: 5000, avatar: el('botAvatar').src };
+
+botNameEl.innerText = bot.name;
+
+/* UI update helpers */
+function updateTotals(){
+  upTotalEl.innerText = roundState.totals.up.toFixed(2);
+  downTotalEl.innerText = roundState.totals.down.toFixed(2);
+  playersCountEl.innerText = 1 + (roundState.bets.up.length + roundState.bets.down.length > 0 ? 1 : 0); // demo
+}
+
+/* Place bet (user or bot) */
+function placeBet(side, who, amount){
+  amount = +amount;
+  if(!amount || amount <= 0) return false;
+  // For user, check balance
+  if(who === 'you'){
+    if(amount > balance) { alert('Insufficient balance'); return false; }
+    balance -= amount;
+    localStorage.setItem(BAL_KEY, balance);
+    balanceEl.innerText = balance.toFixed(2);
+  } else {
+    bot.balance -= amount;
   }
-  function saveLocalTxns(arr){ localStorage.setItem(USER_TXNS_KEY, JSON.stringify(arr)) }
+  roundState.bets[side].push({ who, amount, ts: Date.now() });
+  roundState.totals[side] += amount;
+  updateTotals();
+  logRecentBet(who, side, amount);
+  return true;
+}
 
-  function renderHistory(){
-    const arr = loadLocalTxns();
-    if(!arr.length) { historyEl.innerText = 'No history yet'; return; }
-    historyEl.innerHTML = arr.slice().reverse().map(it=>`<div style="margin-bottom:6px"><strong>${it.txn}</strong><br/><small style="color:var(--muted)">Status: ${it.status} • ${new Date(it.ts).toLocaleString()}</small></div>`).join('');
-    // show last
-    const last = arr[arr.length-1];
-    yourDepositEl.innerText = last ? last.txn : 'No deposit submitted';
-    yourStatusEl.innerText = last ? last.status : '—';
-    yourStatusEl.style.color = last ? (last.status==='approved' ? 'lime' : last.status==='rejected' ? 'tomato' : 'orange') : 'var(--muted)';
+function logRecentBet(who, side, amount){
+  const eln = document.createElement('div');
+  eln.innerHTML = `<small>${who} bet ${amount} on ${side}</small>`;
+  recentEl.prepend(eln);
+  setTimeout(()=> { if(eln && eln.parentNode) eln.remove(); }, 7000);
+}
+
+/* Button handlers */
+betUpBtn.addEventListener('click', ()=>{
+  const amt = parseFloat(betAmountInput.value);
+  if(!amt) return alert('Enter bet amount');
+  if(placeBet('up', 'you', amt)){ addToHistory('you', 'up', amt); }
+});
+betDownBtn.addEventListener('click', ()=>{
+  const amt = parseFloat(betAmountInput.value);
+  if(!amt) return alert('Enter bet amount');
+  if(placeBet('down', 'you', amt)){ addToHistory('you', 'down', amt); }
+});
+
+/* Clicking lanes also quick-bet (uses input amount) */
+laneUp.addEventListener('click', ()=> betUpBtn.click());
+laneDown.addEventListener('click', ()=> betDownBtn.click());
+
+/* small ledger history */
+function addToHistory(who, side, amt){
+  const arr = JSON.parse(localStorage.getItem('tradelive_bet_history') || '[]');
+  arr.push({ who, side, amt, round, ts: Date.now() });
+  localStorage.setItem('tradelive_bet_history', JSON.stringify(arr));
+}
+
+/* Bot auto-bet each round (random) */
+function botPlaceRandom(){
+  // bot will choose side weighted by current totals with slight randomness
+  const side = (Math.random() < 0.5) ? 'up' : 'down';
+  // bet size relative to totals, but not exceed bot balance
+  const max = Math.min(50, Math.max(5, (roundState.totals.up + roundState.totals.down) * 0.25 || 10));
+  const amt = +(Math.random() * (max - 2) + 2).toFixed(2);
+  if(bot.balance >= amt){
+    placeBet(side, bot.name, amt);
+    botBetInfo.innerText = `${bot.name} bet ${amt} on ${side.toUpperCase()}`;
+  } else {
+    botBetInfo.innerText = `${bot.name} inactive (low funds)`;
   }
-  renderHistory();
+}
 
-  submitBtn.addEventListener('click', async ()=>{
-    const txn = txnInput.value.trim();
-    if(!txn){ showToast('Enter a transaction id'); return; }
-    const wallet = walletEl.innerText.trim();
-    // disable button while sending
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'Submitting...';
+/* Round control */
+function startRound(){
+  round++;
+  roundNumEl.innerText = round;
+  // reset state
+  roundState = { bets: { up: [], down: [] }, totals: { up:0, down:0 }, startPrice: points[points.length-1], endPrice: null };
+  phase = 'bet';
+  phaseEl.innerText = 'BET';
+  timer = 20; timerEl.innerText = timer + 's';
+  updateTotals();
+  // add small UI hint
+  botBetInfo.innerText = `${bot.name} will place bets...`;
 
-    try{
-      const res = await fetch(API_BASE + '/deposits', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ wallet, txn })
-      });
-      if(!res.ok) throw new Error('Network error');
-      const data = await res.json(); // expected { success:true, deposit: { id, wallet, txn, status, createdAt } }
-      // save locally
-      const arr = loadLocalTxns();
-      arr.push({ id: data.deposit.id || (data.deposit.txn||txn), txn: data.deposit.txn||txn, status: data.deposit.status||'pending', ts: Date.now() });
-      saveLocalTxns(arr);
-      renderHistory();
-      txnInput.value = '';
-      showToast('Txn submitted — awaiting admin approval');
-    }catch(err){
-      console.error(err);
-      showToast('Submit failed');
-    }finally{
-      submitBtn.disabled = false;
-      submitBtn.innerText = 'Submit Txn';
+  // bot places an initial bet just after round start
+  setTimeout(()=> botPlaceRandom(), 1200);
+  // optionally bot may place more bets during betting period
+  const botHabit = setInterval(()=> { if(phase==='bet' && Math.random()<0.4) botPlaceRandom(); }, 4000);
+
+  timerInterval && clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    timer--;
+    timerEl.innerText = timer + 's';
+    if(timer <= 0){
+      clearInterval(timerInterval);
+      clearInterval(botHabit);
+      // move to result countdown
+      startResultCountdown();
     }
-  });
+  }, 1000);
+}
 
-  /* ---------------------------
-     Real-time deposit status updates
-     Try SSE at /api/stream (server-sent events)
-     Fallback to polling /api/deposits?wallet=...
-     --------------------------- */
-  async function fetchStatusesOnce(){
-    try{
-      const wallet = walletEl.innerText.trim();
-      const r = await fetch(API_BASE + '/deposits?wallet=' + encodeURIComponent(wallet));
-      if(!r.ok) return;
-      const list = await r.json(); // expected array of deposits for wallet
-      // merge into local store
-      const local = loadLocalTxns();
-      const mapped = local.map(l=>{
-        const found = list.find(x => x.txn === l.txn || x.id === l.id);
-        if(found){ l.status = found.status; }
-        return l;
-      });
-      saveLocalTxns(mapped);
-      renderHistory();
-    }catch(e){ console.warn('poll err', e) }
-  }
+function startResultCountdown(){
+  phase = 'result';
+  phaseEl.innerText = 'RESULT';
+  // record price at betting end
+  roundState.startPrice = points[points.length-1];
+  timer = 5; timerEl.innerText = timer + 's';
 
-  // SSE connection
-  let sse;
-  function startSSE(){
-    if(typeof(EventSource) === 'undefined') return false;
-    try{
-      sse = new EventSource(API_BASE + '/stream'); // server should emit events like: event: deposit-updated\ndata: {...}
-      sse.onmessage = e => {
-        // generic message — try parse
-        try{
-          const d = JSON.parse(e.data);
-          if(d.type === 'deposit-updated' && d.deposit){
-            // update local store if matches wallet
-            const wallet = walletEl.innerText.trim();
-            if(d.deposit.wallet === wallet){
-              const local = loadLocalTxns();
-              const foundIdx = local.findIndex(x => x.txn === d.deposit.txn || x.id === d.deposit.id);
-              if(foundIdx >= 0){ local[foundIdx].status = d.deposit.status; }
-              else { local.push({ id:d.deposit.id, txn:d.deposit.txn, status:d.deposit.status, ts: Date.now() }); }
-              saveLocalTxns(local); renderHistory();
-            }
-          }
-        }catch(e){ console.warn('sse parse', e) }
-      };
-      sse.onerror = err => {
-        console.warn('SSE error', err);
-        // try fallback polling after a while
-        sse.close();
-        setTimeout(()=> pollLoop(), 2000);
-      };
-      return true;
-    }catch(e){
-      console.warn('SSE start failed', e);
-      return false;
-    }
-  }
-
-  // Poll fallback
-  let pollTimer;
-  function pollLoop(){
-    clearInterval(pollTimer);
-    pollTimer = setInterval(fetchStatusesOnce, 3000);
-    // also run once immediately
-    fetchStatusesOnce();
-  }
-
-  // Try SSE; if not supported or fails, start polling
-  (async ()=> {
-    const ok = startSSE();
-    if(!ok) pollLoop();
-  })();
-
-  /* ---------------------------
-     Graph (persistent) - same generator as earlier
-     --------------------------- */
-  const ctx = document.getElementById('priceChart').getContext('2d');
-
-  function loadPoints(){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch(e){ return null; }
-  }
-  function savePoints(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
-
-  let points = loadPoints() || (function seed(){
-    const start = 100 + Math.random()*6;
-    const a=[start];
-    for(let i=1;i<40;i++){ const last=a[a.length-1]; const change=(Math.random()-0.4)*1.2; a.push(Math.max(1, +(last+change).toFixed(3))); }
-    savePoints(a); return a;
-  })();
-
-  function makeGradient(up=true){
-    const g = ctx.createLinearGradient(0,0,0,320);
-    if(up){ g.addColorStop(0,'rgba(0,210,122,0.16)'); g.addColorStop(1,'rgba(0,210,122,0.02)'); }
-    else { g.addColorStop(0,'rgba(255,77,79,0.12)'); g.addColorStop(1,'rgba(255,77,79,0.02)'); }
-    return g;
-  }
-
-  const chart = new Chart(ctx, {
-    type:'line',
-    data:{ labels:points.map((_,i)=>i), datasets:[{ data:points, borderWidth:2.5, borderColor:'#00d27a', backgroundColor:makeGradient(true), fill:true, tension:0.35, pointRadius:0 }] },
-    options:{ animation:{duration:400,easing:'linear'}, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}}, responsive:true, maintainAspectRatio:false }
-  });
-
-  function refreshUI(){
-    const last = points[points.length-1], prev = points.length>1?points[points.length-2]:last, up = last >= prev;
-    el('priceValue').innerText = '$' + (+last).toFixed(3);
-    el('priceArrow').innerText = up ? '▲' : '▼';
-    el('priceArrow').style.color = up ? '#00d27a' : '#ff4d4f';
-    el('pointCount').innerText = points.length;
-  }
-  refreshUI();
-
-  function generateNext(){
+  // freeze bets (UI already won't accept new because we'll check phase)
+  // show small animation: we add a few automatic price ticks to simulate result movement
+  const resultTicks = 5;
+  let tickCount = 0;
+  const resultTicker = setInterval(()=>{
+    // generate a slightly larger move to decide winner
     const last = points[points.length-1];
-    const drift = (Math.random()-0.52)*0.25;
-    const noise = (Math.random()-0.5)*0.6;
-    const spike = (Math.random() < 0.03) ? (Math.random()*4 - 2) : 0;
-    return Math.max(0.01, +(last + drift + noise + spike).toFixed(3));
-  }
-
-  let paused = false;
-  function pushPoint(){
-    const next = generateNext();
+    const move = (Math.random() - 0.5) * 1.8 + (Math.random() < 0.3 ? (Math.random()>0.5?1:-1) : 0);
+    const next = Math.max(0.01, +(last + move).toFixed(3));
     points.push(next);
-    if(points.length > 120) points.shift();
+    if(points.length > MAX_POINTS) points.shift();
     savePoints(points);
-    chart.data.labels = points.map((_,i)=>i);
-    chart.data.datasets[0].data = points;
     const up = points[points.length-1] >= points[points.length-2];
+    chart.data.datasets[0].data = points;
     chart.data.datasets[0].borderColor = up ? '#00d27a' : '#ff4d4f';
     chart.data.datasets[0].backgroundColor = makeGradient(up);
     chart.update('active');
-    refreshUI();
-  }
+    refreshChartUI();
+    tickCount++;
+    if(tickCount >= resultTicks){
+      clearInterval(resultTicker);
+    }
+  }, 150);
 
-  let ticker = setInterval(()=>{ if(!paused) pushPoint(); }, UPDATE_MS);
-  el('pauseBtn').addEventListener('click', ()=>{ paused=true; el('pauseBtn').style.opacity=.6; el('resumeBtn').style.opacity=1 });
-  el('resumeBtn').addEventListener('click', ()=>{ paused=false; el('pauseBtn').style.opacity=1; el('resumeBtn').style.opacity=.6 });
+  // countdown
+  const resInterval = setInterval(()=>{
+    timer--;
+    timerEl.innerText = timer + 's';
+    if(timer <= 0){
+      clearInterval(resInterval);
+      finalizeRound();
+    }
+  },1000);
+}
 
-  /* initial load of statuses for this wallet */
-  fetchStatusesOnce();
-  renderHistory();
-  </script>
-</body>
-</html>
+/* determine winners & payouts */
+function finalizeRound(){
+  roundState.endPrice = points[points.length-1];
+  const upAmount = roundState.totals.up;
+  const downAmount = roundState.totals.down;
+  const result = roundState.endPrice > roundState.startPrice ? 'up' : (roundState.endPrice < roundState.startPrice ? 'down' : 'draw');
+  // simple payout: winners split losers proportionally (minus 0% fee for demo)
+  let payoutSummary = { winners: [], losers: [], payout: 0 };
+
+  if(result === 'draw'){
+    // refund everyone
+    roundState.bets.up.concat(roundState.bets.down).forEach(b=>{
+      if(b.who === 'you'){ balance += b.amount; }
+      else if(b.who === bot.name){ bot.balance += b.amount; }
+    });
+    localStorage.setItem(BAL_KEY, balance);
+    balanceEl.innerText = balance.toFixed(2);
+  } else {
+    const winners = result === 'up' ? roundState.bets.up : roundState.bets.down;
+    const losers = result === 'up' ? roundState
