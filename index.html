@@ -1,240 +1,151 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BetWin Game</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BetWin Demo</title>
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
-      text-align: center;
-    }
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px;
-      background: #000;
-    }
-    .balance {
-      font-size: 18px;
-    }
-    .plus-btn {
-      background: green;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      font-size: 18px;
-      cursor: pointer;
-    }
-    .menu {
-      position: relative;
-    }
-    .menu-btn {
-      background: none;
-      border: none;
-      font-size: 22px;
-      color: white;
-      cursor: pointer;
-    }
-    .menu-content {
-      display: none;
-      position: absolute;
-      right: 0;
-      background: #222;
-      min-width: 180px;
-      border-radius: 8px;
-      overflow: hidden;
-      z-index: 1;
-    }
-    .menu-content button {
-      display: block;
-      width: 100%;
-      padding: 10px;
-      background: none;
-      border: none;
-      color: white;
-      text-align: left;
-      cursor: pointer;
-    }
-    .menu-content button:hover {
-      background: #444;
-    }
-    .card {
-      margin: 20px;
-      padding: 15px;
-      background: #222;
-      border-radius: 10px;
-      text-align: left;
-    }
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      justify-content: center;
-      align-items: center;
-    }
-    .modal-content {
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      width: 300px;
-    }
-    .modal input {
-      width: 90%;
-      padding: 8px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: none;
-    }
-    .modal button {
-      background: green;
-      padding: 8px 12px;
-      border: none;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+    body{font-family:Inter, Arial;margin:0;background:#0f1720;color:#e6eef6}
+    .container{max-width:420px;margin:12px auto;padding:12px}
+    .card{background:#0b1220;border-radius:12px;padding:12px;margin-bottom:12px}
+    .timer{font-size:38px;text-align:center}
+    .up{background:linear-gradient(180deg,#07341a44,#042d14);border:1px solid rgba(20,200,120,0.08);padding:8px}
+    .down{background:linear-gradient(180deg,#4b0f0f44,#2a0a0a);border:1px solid rgba(255,80,80,0.06);padding:8px}
+    .players{display:flex;gap:8px;flex-wrap:wrap}
+    .player{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:13px}
+    .green{color:#a6f4c5}
+    .red{color:#ffa8a8}
+    .controls{display:flex;gap:8px;justify-content:center;margin-top:8px}
+    .btn{padding:8px 12px;border-radius:8px;cursor:pointer}
+    .btn.up{background:#0ea45a;color:#022a12}
+    .btn.down{background:#e14b4b;color:#2b0b0b}
+    .small{font-size:12px;color:#9aa7b2}
+    .chart-placeholder{height:160px;background:linear-gradient(#0b1418,#082029);border-radius:8px;margin:8px 0;position:relative}
   </style>
 </head>
 <body>
-
-  <header>
-    <div class="balance">Balance: <span id="balance">100</span> USDT</div>
-    <button class="plus-btn" onclick="openDeposit()">+</button>
-    <div class="menu">
-      <button class="menu-btn" onclick="toggleMenu()">⋮</button>
-      <div class="menu-content" id="menu">
-        <button onclick="openDeposit()">Deposit</button>
-        <button onclick="withdraw()">Withdraw</button>
+  <div class="container">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="small">BTC</div>
+          <div id="livePrice" class="small">Live 117,000.00</div>
+        </div>
+        <div class="timer" id="timer">--s</div>
       </div>
+
+      <div class="chart-placeholder" id="chart">
+        <!-- simple fake chart line could be drawn via canvas; for demo we keep placeholder -->
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <div style="flex:1" class="up card">
+          <div class="small">Up Wins</div>
+          <div id="upTotal" class="green">$0.00</div>
+          <div id="upPlayers" class="players"></div>
+        </div>
+
+        <div style="flex:1" class="down card">
+          <div class="small">Down Wins</div>
+          <div id="downTotal" class="red">$0.00</div>
+          <div id="downPlayers" class="players"></div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <button id="betUp" class="btn up">Up</button>
+        <button id="betDown" class="btn down">Down</button>
+      </div>
+
+      <div class="small" style="text-align:center;margin-top:8px">Place bet demo: press Up/Down to simulate a real player</div>
     </div>
-  </header>
 
-  <!-- Smooth Graph -->
-  <canvas id="myChart" height="200"></canvas>
-
-  <!-- Game Log -->
-  <div class="card">
-    <h3>📊 Game Log</h3>
-    <div id="gameLog"></div>
+    <div class="small">Status: <span id="status">connecting...</span></div>
   </div>
 
-  <!-- Deposit Modal -->
-  <div class="modal" id="depositModal">
-    <div class="modal-content">
-      <h3>Deposit USDT</h3>
-      <p>Send USDT to this address:</p>
-      <p style="background:#333;padding:5px;border-radius:5px;">0xYourWalletAddressHere</p>
-      <input type="text" id="txId" placeholder="Enter Transaction ID">
-      <button onclick="submitTx()">Submit</button>
-      <br><br>
-      <button style="background:red;" onclick="closeDeposit()">Close</button>
-    </div>
-  </div>
-
+  <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
   <script>
-    let balance = 100;
-    let pendingTx = [];
+    const SERVER = 'http://localhost:4000'; // change to your backend URL
+    const socket = io(SERVER);
 
-    // Chart setup
-    const ctx = document.getElementById('myChart').getContext('2d');
-    const chartData = {
-      labels: Array.from({length: 20}, (_, i) => i),
-      datasets: [{
-        label: 'BTC/USDT',
-        data: Array.from({length: 20}, () => 20000 + Math.random()*1000),
-        borderColor: 'lime',
-        tension: 0.4
-      }]
-    };
-    const myChart = new Chart(ctx, {
-      type: 'line',
-      data: chartData,
-      options: { scales: { x: {display: false}, y: {display: false} } }
+    const timerEl = document.getElementById('timer');
+    const upPlayersEl = document.getElementById('upPlayers');
+    const downPlayersEl = document.getElementById('downPlayers');
+    const upTotalEl = document.getElementById('upTotal');
+    const downTotalEl = document.getElementById('downTotal');
+    const statusEl = document.getElementById('status');
+
+    let currentRound = null;
+
+    function renderBets(bets = []){
+      upPlayersEl.innerHTML = '';
+      downPlayersEl.innerHTML = '';
+      let totals = { up: 0, down: 0 };
+      bets.forEach(b => {
+        const el = document.createElement('div');
+        el.className = 'player';
+        el.innerText = `${b.name} $${b.amount}`;
+        if (b.side === 'up') { upPlayersEl.appendChild(el); totals.up += Number(b.amount); }
+        else { downPlayersEl.appendChild(el); totals.down += Number(b.amount); }
+      });
+      upTotalEl.innerText = `$${totals.up.toFixed(2)}`;
+      downTotalEl.innerText = `$${totals.down.toFixed(2)}`;
+    }
+
+    socket.on('connect', () => {
+      statusEl.innerText = 'connected';
+      socket.emit('get:state');
     });
 
-    function updateChart() {
-      chartData.datasets[0].data.push(20000 + Math.random()*1000);
-      chartData.datasets[0].data.shift();
-      myChart.update();
-    }
-    setInterval(updateChart, 2000);
-
-    // Balance
-    function updateBalance() {
-      document.getElementById("balance").innerText = balance;
-    }
-
-    // Deposit Modal
-    function openDeposit() {
-      document.getElementById("depositModal").style.display = "flex";
-    }
-    function closeDeposit() {
-      document.getElementById("depositModal").style.display = "none";
-    }
-    function submitTx() {
-      let txId = document.getElementById("txId").value;
-      if (txId) {
-        pendingTx.push(txId);
-        alert("Transaction submitted! Wait for admin approval.");
-        document.getElementById("txId").value = "";
-        closeDeposit();
+    socket.on('state', ({ currentRound: cr }) => {
+      if (cr) {
+        currentRound = cr;
+        renderBets(cr.bets || []);
+        timerEl.innerText = (cr.remaining ?? cr.duration) + 's';
       }
-    }
+    });
 
-    // Withdraw
-    function withdraw() {
-      let amount = prompt("Enter withdraw amount:");
-      if (amount && !isNaN(amount)) {
-        amount = parseFloat(amount);
-        if (amount <= balance) {
-          balance -= amount;
-          updateBalance();
-          alert("Withdraw request submitted. Wait for admin approval.");
-        } else {
-          alert("Not enough balance!");
-        }
-      }
-    }
+    socket.on('round:start', ({ id, duration, bets }) => {
+      currentRound = { id, duration, remaining: duration, bets };
+      renderBets(bets);
+      timerEl.innerText = duration + 's';
+      statusEl.innerText = 'round started';
+    });
 
-    // Menu toggle
-    function toggleMenu() {
-      let menu = document.getElementById("menu");
-      menu.style.display = menu.style.display === "block" ? "none" : "block";
-    }
+    socket.on('round:tick', ({ id, remaining }) => {
+      if (!currentRound || currentRound.id !== id) return;
+      currentRound.remaining = remaining;
+      timerEl.innerText = remaining + 's';
+    });
 
-    // Bot Prediction
-    function botGame() {
-      let betAmount = 10;
-      if (balance < betAmount) return;
+    socket.on('bet:placed', (bet) => {
+      if (!currentRound) return;
+      currentRound.bets.push(bet);
+      renderBets(currentRound.bets);
+    });
 
-      balance -= betAmount;
-      let winChance = Math.random();
-      let result;
-      if (winChance < 0.3) {
-        balance += betAmount * 2;
-        result = "✅ Bot won! +" + betAmount;
+    socket.on('round:end', (result) => {
+      statusEl.innerText = `round ended: ${result.outcome.toUpperCase()}`;
+      // Simple visual flash indicating winner
+      if (result.outcome === 'up') {
+        document.querySelector('.up').style.boxShadow = '0 0 0 4px rgba(12,200,120,0.10)';
+        setTimeout(()=> document.querySelector('.up').style.boxShadow = '', 1200);
       } else {
-        result = "❌ Bot lost -" + betAmount;
+        document.querySelector('.down').style.boxShadow = '0 0 0 4px rgba(255,80,80,0.08)';
+        setTimeout(()=> document.querySelector('.down').style.boxShadow = '', 1200);
       }
-      updateBalance();
+    });
 
-      let log = document.getElementById("gameLog");
-      let entry = document.createElement("div");
-      entry.textContent = new Date().toLocaleTimeString() + " - " + result;
-      log.prepend(entry);
+    // Place a demo user bet
+    function placeUserBet(side){
+      const name = 'You';
+      const amount = (Math.random()*10+1).toFixed(2);
+      socket.emit('place:bet', { name, side, amount });
     }
-    setInterval(botGame, 10000);
-  </script>
 
+    document.getElementById('betUp').addEventListener('click', ()=> placeUserBet('up'));
+    document.getElementById('betDown').addEventListener('click', ()=> placeUserBet('down'));
+
+  </script>
 </body>
 </html>
