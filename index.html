@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BetWin Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       margin: 0;
@@ -46,7 +47,7 @@
       position: absolute;
       right: 0;
       background: #222;
-      min-width: 150px;
+      min-width: 180px;
       border-radius: 8px;
       overflow: hidden;
       z-index: 1;
@@ -71,43 +72,55 @@
       border-radius: 10px;
       text-align: left;
     }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      width: 300px;
+    }
+    .modal input {
+      width: 90%;
+      padding: 8px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+    }
+    .modal button {
+      background: green;
+      padding: 8px 12px;
+      border: none;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <header>
     <div class="balance">Balance: <span id="balance">100</span> USDT</div>
-    <button class="plus-btn" onclick="deposit()">+</button>
+    <button class="plus-btn" onclick="openDeposit()">+</button>
     <div class="menu">
       <button class="menu-btn" onclick="toggleMenu()">⋮</button>
       <div class="menu-content" id="menu">
-        <button onclick="deposit()">Deposit</button>
+        <button onclick="openDeposit()">Deposit</button>
         <button onclick="withdraw()">Withdraw</button>
       </div>
     </div>
   </header>
 
-  <!-- TradingView Chart -->
-  <div class="tradingview-widget-container" style="height:400px;">
-    <div id="tradingview_chart" style="height:100%;"></div>
-  </div>
-  <script src="https://s3.tradingview.com/tv.js"></script>
-  <script>
-    new TradingView.widget({
-      "width": "100%",
-      "height": 400,
-      "symbol": "BINANCE:BTCUSDT",
-      "interval": "1",
-      "timezone": "Etc/UTC",
-      "theme": "dark",
-      "style": "1",
-      "locale": "en",
-      "toolbar_bg": "#f1f3f6",
-      "enable_publishing": false,
-      "allow_symbol_change": true,
-      "container_id": "tradingview_chart"
-    });
-  </script>
+  <!-- Smooth Graph -->
+  <canvas id="myChart" height="200"></canvas>
 
   <!-- Game Log -->
   <div class="card">
@@ -115,21 +128,70 @@
     <div id="gameLog"></div>
   </div>
 
+  <!-- Deposit Modal -->
+  <div class="modal" id="depositModal">
+    <div class="modal-content">
+      <h3>Deposit USDT</h3>
+      <p>Send USDT to this address:</p>
+      <p style="background:#333;padding:5px;border-radius:5px;">0xYourWalletAddressHere</p>
+      <input type="text" id="txId" placeholder="Enter Transaction ID">
+      <button onclick="submitTx()">Submit</button>
+      <br><br>
+      <button style="background:red;" onclick="closeDeposit()">Close</button>
+    </div>
+  </div>
+
   <script>
     let balance = 100;
+    let pendingTx = [];
 
+    // Chart setup
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const chartData = {
+      labels: Array.from({length: 20}, (_, i) => i),
+      datasets: [{
+        label: 'BTC/USDT',
+        data: Array.from({length: 20}, () => 20000 + Math.random()*1000),
+        borderColor: 'lime',
+        tension: 0.4
+      }]
+    };
+    const myChart = new Chart(ctx, {
+      type: 'line',
+      data: chartData,
+      options: { scales: { x: {display: false}, y: {display: false} } }
+    });
+
+    function updateChart() {
+      chartData.datasets[0].data.push(20000 + Math.random()*1000);
+      chartData.datasets[0].data.shift();
+      myChart.update();
+    }
+    setInterval(updateChart, 2000);
+
+    // Balance
     function updateBalance() {
       document.getElementById("balance").innerText = balance;
     }
 
-    function deposit() {
-      let amount = prompt("Enter deposit amount:");
-      if (amount && !isNaN(amount)) {
-        balance += parseFloat(amount);
-        updateBalance();
+    // Deposit Modal
+    function openDeposit() {
+      document.getElementById("depositModal").style.display = "flex";
+    }
+    function closeDeposit() {
+      document.getElementById("depositModal").style.display = "none";
+    }
+    function submitTx() {
+      let txId = document.getElementById("txId").value;
+      if (txId) {
+        pendingTx.push(txId);
+        alert("Transaction submitted! Wait for admin approval.");
+        document.getElementById("txId").value = "";
+        closeDeposit();
       }
     }
 
+    // Withdraw
     function withdraw() {
       let amount = prompt("Enter withdraw amount:");
       if (amount && !isNaN(amount)) {
@@ -137,26 +199,28 @@
         if (amount <= balance) {
           balance -= amount;
           updateBalance();
+          alert("Withdraw request submitted. Wait for admin approval.");
         } else {
           alert("Not enough balance!");
         }
       }
     }
 
+    // Menu toggle
     function toggleMenu() {
       let menu = document.getElementById("menu");
       menu.style.display = menu.style.display === "block" ? "none" : "block";
     }
 
-    // Bot Prediction Game
+    // Bot Prediction
     function botGame() {
       let betAmount = 10;
       if (balance < betAmount) return;
 
       balance -= betAmount;
-      let winChance = Math.random(); // 0 to 1
+      let winChance = Math.random();
       let result;
-      if (winChance < 0.3) {  // 30% win chance
+      if (winChance < 0.3) {
         balance += betAmount * 2;
         result = "✅ Bot won! +" + betAmount;
       } else {
@@ -169,8 +233,6 @@
       entry.textContent = new Date().toLocaleTimeString() + " - " + result;
       log.prepend(entry);
     }
-
-    // Run bot every 10 seconds
     setInterval(botGame, 10000);
   </script>
 
