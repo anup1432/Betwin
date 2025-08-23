@@ -60,42 +60,66 @@ button:hover{background:#ffa726;}
 </div>
 
 <script>
-// Graph
-const ctx = document.getElementById('predictionGraph').getContext('2d');
-const predictionGraph = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ['0','1','2','3','4','5','6'],
-        datasets: [{
-            label: 'Crypto Prediction',
-            data: [10,15,12,20,18,25,22],
-            borderColor: '#ff9800',
-            backgroundColor: 'rgba(255,152,0,0.2)',
-            tension: 0.4,
-            fill:true
-        }]
-    },
-    options: {
-        scales: {
-            x:{grid:{color:'#444'},ticks:{color:'#fff'}},
-            y:{grid:{color:'#444'},ticks:{color:'#fff'}}
-        },
-        plugins: {
-            legend:{labels:{color:'#fff'}}
-        }
-    }
-});
-
 // Copy wallet address
 function copyAddress(){
     const addr = document.getElementById('walletAddress').innerText;
     navigator.clipboard.writeText(addr).then(()=>alert('Wallet address copied!'));
 }
 
-// Optional: Randomly change bot prediction every 5 sec
+// Smooth professional graph with color based on movement
+const ctx = document.getElementById('predictionGraph').getContext('2d');
+let dataPoints = [100, 102, 101, 103, 102, 104, 106];
+const gradient = ctx.createLinearGradient(0,0,0,200);
+gradient.addColorStop(0,'rgba(255,152,0,0.5)');
+gradient.addColorStop(1,'rgba(255,152,0,0)');
+
+const chart = new Chart(ctx,{
+    type:'line',
+    data:{
+        labels:dataPoints.map((_,i)=>i),
+        datasets:[{
+            label:'Crypto Prediction',
+            data:dataPoints,
+            borderColor:()=>dataPoints[dataPoints.length-1]-dataPoints[dataPoints.length-2]>0?'#00ff00':'#ff0000',
+            backgroundColor:gradient,
+            tension:0.4,
+            fill:true,
+            pointRadius:3
+        }]
+    },
+    options:{
+        responsive:true,
+        scales:{
+            x:{grid:{color:'#444'},ticks:{color:'#fff'}},
+            y:{grid:{color:'#444'},ticks:{color:'#fff'}}
+        },
+        plugins:{
+            legend:{labels:{color:'#fff'}}
+        },
+        animation:{
+            duration:1000,
+            easing:'easeInOutQuart'
+        }
+    }
+});
+
+// Animate graph randomly to simulate real-time
 setInterval(()=>{
-    const upText = ["Price UP strongly","Minor UP expected","UP trend continues"];
-    const downText = ["Price DOWN sharply","Minor DOWN expected","DOWN trend continues"];
+    const last = dataPoints[dataPoints.length-1];
+    const change = (Math.random()*4-2); // random -2 to +2
+    const next = last + change;
+    dataPoints.push(next);
+    if(dataPoints.length>20) dataPoints.shift();
+    chart.data.labels = dataPoints.map((_,i)=>i);
+    chart.data.datasets[0].data = dataPoints;
+    chart.data.datasets[0].borderColor = change>0?'#00ff00':'#ff0000';
+    chart.update();
+},2000);
+
+// Random bot prediction change
+setInterval(()=>{
+    const upText = ["Strong UP trend","Minor UP expected","UP trend continues"];
+    const downText = ["Strong DOWN trend","Minor DOWN expected","DOWN trend continues"];
     document.getElementById('botUpPrediction').innerText = upText[Math.floor(Math.random()*upText.length)];
     document.getElementById('botDownPrediction').innerText = downText[Math.floor(Math.random()*downText.length)];
 },5000);
