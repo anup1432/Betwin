@@ -1,22 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Admin Dashboard</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; text-align: center; }
-    .container { max-width: 600px; margin: 100px auto; background: #1e293b; padding: 30px; border-radius: 12px; }
-    h1 { margin-bottom: 20px; }
-    .card { background: #334155; padding: 20px; margin: 15px 0; border-radius: 10px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>BetWin – Admin Dashboard</title>
+<style>
+  :root{--bg:#0d1117;--panel:#111827;--border:#30363d;--text:#e5e7eb;--muted:#9ca3af;--ok:#22c55e;--bad:#ef4444;--brand:#3b82f6}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+  header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  header h1{margin:0;font-size:18px}
+  header .tag{font-size:12px;border:1px solid var(--border);padding:4px 8px;border-radius:999px;color:var(--muted)}
+  main{max-width:1100px;margin:18px auto;padding:0 14px;display:grid;gap:16px}
+  .cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px}
+  .card h3{margin:0 0 8px;font-size:14px;color:var(--muted)} .metric{font-size:22px;font-weight:800}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tab{background:#0b1220;border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:10px;cursor:pointer}
+  .tab.active{background:var(--brand);border-color:var(--brand)}
+  .pane{display:none}.pane.active{display:block}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .right{margin-left:auto}
+  .btn{border:0;border-radius:10px;padding:8px 12px;font-weight:700;cursor:pointer}
+  .btn-ghost{background:#0b1220;color:var(--text);border:1px solid var(--border)}
+  .btn-ok{background:var(--ok);color:#06280d}.btn-bad{background:var(--bad);color:#fff}
+  input,select{background:#0b1220;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 10px;outline:none}
+  input::placeholder{color:#6b7280}
+  table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:10px;overflow:hidden}
+  th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left;font-size:14px}
+  th{background:#0f172a;color:#cbd5e1}
+  .muted{color:var(--muted)} .warn{color:#fbbf24;font-size:12px}
+  .pill{font-size:12px;border:1px solid var(--border);padding:2px 8px;border-radius:999px}
+  .search{min-width:220px}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Welcome, Admin 👑</h1>
-    <div class="card">📊 Total Users: 12</div>
-    <div class="card">💰 Total Deposits: $500</div>
-    <div class="card">🏦 Pending Withdrawals: 2</div>
+<header>
+  <h1>Admin Dashboard</h1>
+  <span class="tag">Local demo • attach backend for real payouts</span>
+</header>
+
+<main>
+  <!-- Top Metrics -->
+  <section class="cards">
+    <div class="card">
+      <h3>Users</h3>
+      <div class="metric" id="mUsers">0</div>
+    </div>
+    <div class="card">
+      <h3>Total Balance (All Users)</h3>
+      <div class="metric" id="mTotalBal">$0</div>
+    </div>
+    <div class="card">
+      <h3>Pending Deposits</h3>
+      <div class="metric" id="mDep">0</div>
+    </div>
+    <div class="card">
+      <h3>Pending Withdrawals</h3>
+      <div class="metric" id="mWdr">0</div>
+    </div>
+  </section>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="users">Users</button>
+    <button class="tab" data-tab="deposits">Deposits</button>
+    <button class="tab" data-tab="withdrawals">Withdrawals</button>
+    <span class="right row">
+      <button class="btn btn-ghost" id="seedBtn" title="Add sample data if empty">Seed Demo Data</button>
+      <button class="btn btn-ghost" id="exportBtn" title="Download JSON">Export JSON</button>
+      <button class="btn btn-ghost" id="clearBtn" title="Clear only admin demo data">Clear Admin Data</button>
+    </span>
   </div>
+
+  <!-- USERS -->
+  <section class="pane active" id="pane-users">
+    <div class="row" style="margin:10px 0">
+      <input id="uName" type="text" placeholder="New username" />
+      <input id="uBal" type="number" placeholder="Start balance (default 100)" />
+      <button class="btn btn-ghost" id="addUserBtn">Add User</button>
+      <span class="muted">User IDs auto-increment hotey hain.</span>
+      <span class="right"></span>
+      <input id="searchUser" class="search" placeholder="Search user or ID..." />
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th><th>Username</th><th>Balance</th><th>Created</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- DEPOSITS -->
+  <section class="pane" id="pane-deposits">
+    <div class="row" style="margin:10px 0">
+      <span class="muted">Approve karne par selected user ka balance credit ho jayega.</span>
+      <span class="right"></span>
+      <input id="searchDep" class="search" placeholder="Search tx/user..." />
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Req ID</th><th>User</th><th>Chain</th><th>From</th><th>Amount</th><th>Assign User</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="depTbody"></tbody>
+      </table>
+      <p class="muted" style="margin:8px 0">Note: Real deposit verify = backend via BscScan/Polygon/TON APIs.</p>
+    </div>
+  </section>
+
+  <!-- WITHDRAWALS -->
+  <section class="pane" id="pane-withdrawals">
+    <div class="row" style="margin:10px 0">
+      <span class="muted">Approve karne par user balance debit hoga (on-chain send = backend).</span>
+      <span class="right"></span>
+      <input id="searchWdr" class="search" placeholder="Search address/user..." />
+    </div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>Req ID</th><th>User</th><th>Chain</th><th>To</th><th>Amount</th><th>Assign User</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="wdrTbody"></tbody>
+      </table>
+      <p class="muted" style="margin:8px 0">Real send = backend (private key in .env; admin approval recorded).</p>
+    </div>
+  </section>
+</main>
+
+<script>
+/* -------------------- Storage Helpers -------------------- */
+const LS = {
+  usersKey: "betwin_users",
+  depKey: "deposit_queue",
+  wdrKey: "withdraw_queue",
+  nextIdKey: "betwin_next_user_id"
+};
+function load(key, fallback){ try{ return JSON.parse(localStorage.getItem(key)) ?? fallback; }catch{ return fallback; } }
+function save(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+/* -------------------- Data Model -------------------- */
+let users = load(LS.usersKey, []);                 // [{id, name, balance, createdAt}]
+let deposits = load(LS.depKey, []);                // [{id, chain, from, amount, userId?}]
+let withdrawals = load(LS.wdrKey, []);             // [{id, chain, to, amount, userId?}]
+let nextUserId = parseInt(localStorage.getItem(LS.nextIdKey) || "1", 10);
+
+function persistAll(){
+  save(LS.usersKey, users);
+  save(LS.depKey, deposits);
+  save(LS.wdrKey, withdrawals);
+  localStorage.setItem(LS.nextIdKey, String(nextUserId));
+  renderAll();
+}
+
+/* -------------------- Seed Demo (only if empty) -------------------- */
+document.getElementById("seedBtn").onclick = () => {
+  if(!users.length){
+    users = [
+      {id: nextUserId++, name:"anup", balance: 120, createdAt: Date.now()},
+      {id: nextUserId++, name:"rahul", balance: 80, createdAt: Date.now()},
+      {id: nextUserId++, name:"neha", balance: 200, createdAt: Date.now()}
+    ];
+  }
+  if(!deposits.length){
+    deposits = [
+      {id: Date.now(), chain:"bep20", from:"0xabc...123", amount: 50},
+      {id: Date.now()+1, chain:"polygon", from:"0xdef...456", amount: 75}
+    ];
+  }
+  if(!withdrawals.length){
+    withdrawals = [
+      {id: Date.now()+2, chain:"bep20", to:"0x111...999", amount: 40},
+      {id: Date.now()+3, chain:"ton", to:"EQxxxxx...abc", amount: 25}
+    ];
+  }
+  persistAll();
+};
+
+/* -------------------- Export / Clear -------------------- */
+document.getElementById("exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify({users,deposits,withdrawals}, null, 2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "betwin-admin-export.json"; a.click();
+  URL.revokeObjectURL(url);
+};
+document.getElementById("clearBtn").onclick = () => {
+  // sirf admin demo data clear kare (game balance/graph ko mat chhoo)
+  localStorage.removeItem(LS.usersKey);
+  localStorage.removeItem(LS.depKey);
+  localStorage.removeItem(LS.wdrKey);
+  localStorage.removeItem(LS.nextIdKey);
+  users=[]; deposits=[]; withdrawals=[]; nextUserId=1;
+  renderAll();
+};
+
+/* -------------------- Metrics -------------------- */
+function renderMetrics(){
+  const mUsers = document.getElementById("mUsers");
+  const mTotalBal = document.getElementById("mTotalBal");
+  const mDep = document.getElementById("mDep");
+  const mWdr = document.getElementById("mWdr");
+  mUsers.textContent = users.length;
+  const total = users.reduce((s,u)=>s+(+u.balance||0),0);
+  mTotalBal.textContent = "$"+total;
+  mDep.textContent = deposits.length;
+  mWdr.textContent = withdrawals.length;
+}
+
+/* -------------------- Users Pane -------------------- */
+const usersTbody = document.getElementById("usersTbody");
+document.getElementById("addUserBtn").onclick = () => {
+  const name = (document.getElementById("uName").value || "").trim() || "user"+nextUserId;
+  const bal = parseFloat(document.getElementById("uBal").value || "100");
+  users.push({id: nextUserId++, name, balance: bal, createdAt: Date.now()});
+  document.getElementById("uName").value=""; document.getElementById("uBal").value="";
+  persistAll();
+};
+document.getElementById("searchUser").oninput = renderUsers;
+
+function renderUsers(){
+  const q = (document.getElementById("searchUser").value || "").toLowerCase();
+  usersTbody.innerHTML = "";
+  users
+    .filter(u => !q || String(u.id).includes(q) || (u.name||"").toLowerCase().includes(q))
+    .forEach(u => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${u.id}</td>
+        <td>${escapeHtml(u.name)}</td>
+        <td>$${(+u.balance).toFixed(2)}</td>
+        <td>${new Date(u.createdAt).toLocaleString()}</td>
+        <td class="row">
+          <input type="number" placeholder="± amount" style="width:120px" id="adj-${u.id}">
+          <button class="btn btn-ghost" data-act="adj" data-id="${u.id}">Adjust</button>
+          <button class="btn btn-bad" data-act="del" data-id="${u.id}">Delete</button>
+        </td>`;
+      usersTbody.appendChild(tr);
+    });
+
+  // actions
+  usersTbody.querySelectorAll("button").forEach(b=>{
+    b.onclick = () => {
+      const id = parseInt(b.dataset.id,10);
+      const act = b.dataset.act;
+      if(act==="del"){
+        users = users.filter(x=>x.id!==id);
+        persistAll();
+      } else if(act==="adj"){
+        const inp = document.getElementById("adj-"+id);
+        const amt = parseFloat(inp.value || "0");
+        if(!isFinite(amt) || !amt) return alert("Enter amount to adjust");
+        const u = users.find(x=>x.id===id); if(!u) return;
+        u.balance = (+u.balance||0) + amt;
+        persistAll();
+      }
+    };
+  });
+}
+
+/* -------------------- Deposits Pane -------------------- */
+const depTbody = document.getElementById("depTbody");
+document.getElementById("searchDep").oninput = renderDeposits;
+
+function userSelectHtml(selectedId){
+  const opts = users.map(u=>`<option value="${u.id}" ${selectedId==u.id?"selected":""}>${u.id} – ${escapeHtml(u.name)}</option>`).join("");
+  return `<select class="uSel">${opts}</select>`;
+}
+function renderDeposits(){
+  const q = (document.getElementById("searchDep").value || "").toLowerCase();
+  depTbody.innerHTML = "";
+  deposits
+    .filter(d => !q || String(d.id).includes(q) || (d.from||"").toLowerCase().includes(q) || (d.chain||"").toLowerCase().includes(q))
+    .forEach(d=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${d.id}</td>
+        <td>${d.userId?("#"+d.userId):'<span class="muted">unassigned</span>'}</td>
+        <td><span class="pill">${d.chain||"-"}</span></td>
+        <td>${escapeHtml(d.from||"-")}</td>
+        <td>$${(+d.amount||0).toFixed(2)}</td>
+        <td>${userSelectHtml(d.userId)}</td>
+        <td class="row">
+          <button class="btn btn-ok" data-act="approve" data-id="${d.id}">Approve</button>
+          <button class="btn btn-bad" data-act="reject" data-id="${d.id}">Reject</button>
+        </td>`;
+      depTbody.appendChild(tr);
+    });
+
+  depTbody.querySelectorAll("button").forEach(b=>{
+    b.onclick = () => {
+      const id = parseInt(b.dataset.id,10);
+      const row = b.closest("tr");
+      const sel = row.querySelector(".uSel");
+      const userId = parseInt(sel.value,10);
+      const dep = deposits.find(x=>x.id===id);
+      if(!dep) return;
+      if(b.dataset.act==="approve"){
+        const u = users.find(x=>x.id===userId);
+        if(!u) return alert("Select a valid user");
+        u.balance = (+u.balance||0) + (+dep.amount||0);
+        deposits = deposits.filter(x=>x.id!==id);
+        persistAll();
+      }else{
+        deposits = deposits.filter(x=>x.id!==id);
+        persistAll();
+      }
+    };
+  });
+}
+
+/* -------------------- Withdrawals Pane -------------------- */
+const wdrTbody = document.getElementById("wdrTbody");
+document.getElementById("searchWdr").oninput = renderWithdrawals;
+
+function renderWithdrawals(){
+  const q = (document.getElementById("searchWdr").value || "").toLowerCase();
+  wdrTbody.innerHTML = "";
+  withdrawals
+    .filter(w => !q || String(w.id).includes(q) || (w.to||"").toLowerCase().includes(q) || (w.chain||"").toLowerCase().includes(q))
+    .forEach(w=>{
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${w.id}</td>
+        <td>${w.userId?("#"+w.userId):'<span class="muted">unassigned</span>'}</td>
+        <td><span class="pill">${w.chain||"-"}</span></td>
+        <td>${escapeHtml(w.to||"-")}</td>
+        <td>$${(+w.amount||0).toFixed(2)}</td>
+        <td>${userSelectHtml(w.userId)}</td>
+        <td class="row">
+          <button class="btn btn-ok" data-act="approve" data-id="${w.id}">Approve</button>
+          <button class="btn btn-bad" data-act="reject" data-id="${w.id}">Reject</button>
+        </td>`;
+      wdrTbody.appendChild(tr);
+    });
+
+  wdrTbody.querySelectorAll("button").forEach(b=>{
+    b.onclick = () => {
+      const id = parseInt(b.dataset.id,10);
+      const row = b.closest("tr");
+      const sel = row.querySelector(".uSel");
+      const userId = parseInt(sel.value,10);
+      const w = withdrawals.find(x=>x.id===id);
+      if(!w) return;
+      if(b.dataset.act==="approve"){
+        const u = users.find(x=>x.id===userId);
+        if(!u) return alert("Select a valid user");
+        const amt = (+w.amount||0);
+        if((+u.balance||0) < amt) return alert("Insufficient balance for this user");
+        u.balance = (+u.balance||0) - amt;
+        withdrawals = withdrawals.filter(x=>x.id!==id);
+        persistAll();
+      }else{
+        withdrawals = withdrawals.filter(x=>x.id!==id);
+        persistAll();
+      }
+    };
+  });
+}
+
+/* -------------------- Tabs -------------------- */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".pane").forEach(p=>p.classList.remove("active"));
+    t.classList.add("active");
+    document.getElementById("pane-"+t.dataset.tab).classList.add("active");
+  };
+});
+
+/* -------------------- Utils -------------------- */
+function renderAll(){ renderMetrics(); renderUsers(); renderDeposits(); renderWithdrawals(); }
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* -------------------- Init -------------------- */
+renderAll();
+</script>
 </body>
 </html>
