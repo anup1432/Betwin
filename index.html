@@ -1,55 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetWin Crypto Prediction Game</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BetWin - Prediction Game</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    #gameChart {
+      max-width: 600px;
+      margin: auto;
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 10px;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+    }
+    .up { background: green; }
+    .down { background: red; }
+    .balance {
+      margin-top: 20px;
+      font-size: 20px;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>BetWin Crypto Prediction Game</h1>
-        <nav>
-            <a href="login.html">Login</a>
-            <a href="admin.html">Admin</a>
-        </nav>
-    </header>
+  <h1>📈 BetWin Prediction Game</h1>
 
-    <main>
-        <section id="game-section">
-            <h2>Predict Crypto Price</h2>
-            <canvas id="cryptoGraph" width="600" height="300"></canvas>
-            <div class="buttons">
-                <button id="upBtn">Up</button>
-                <button id="downBtn">Down</button>
-            </div>
-            <div id="result"></div>
-            <br>
-            <h3>Deposit / Withdraw</h3>
-            <input type="text" id="wallet" placeholder="Your Wallet Address">
-            <input type="number" id="amount" placeholder="Amount">
-            <button id="depositBtn">Deposit</button>
-            <button id="withdrawBtn">Withdraw</button>
-            <div id="walletResult"></div>
-        </section>
+  <!-- Graph -->
+  <canvas id="gameChart" width="400" height="200"></canvas>
 
-        <section id="three-doubt">
-            <h2>Three Common Doubts</h2>
-            <div class="doubt">
-                <button class="toggle">How do I win?</button>
-                <p class="answer">Predict whether the price will go Up or Down. If correct, your balance increases.</p>
-            </div>
-            <div class="doubt">
-                <button class="toggle">Is it real money?</button>
-                <p class="answer">Yes, balance is in USDT. Deposits and withdrawals go through blockchain wallet.</p>
-            </div>
-            <div class="doubt">
-                <button class="toggle">Can I withdraw?</button>
-                <p class="answer">Admin approves deposits and withdrawals to your wallet address.</p>
-            </div>
-        </section>
-    </main>
+  <!-- Buttons -->
+  <div class="buttons">
+    <button class="up" onclick="predict('up')">UP</button>
+    <button class="down" onclick="predict('down')">DOWN</button>
+  </div>
 
-    <script src="main.js"></script>
+  <!-- Balance -->
+  <div class="balance">Balance: $<span id="balance">100</span></div>
+
+  <script>
+    const ctx = document.getElementById('gameChart').getContext('2d');
+
+    // Local storage balance
+    let balance = localStorage.getItem("balance") ? parseInt(localStorage.getItem("balance")) : 100;
+    document.getElementById("balance").innerText = balance;
+
+    // Chart starting data
+    let labels = [];
+    let dataPoints = [];
+    for (let i = 0; i < 20; i++) {
+      labels.push(i.toString());
+      dataPoints.push(Math.floor(Math.random() * 100) + 50);
+    }
+
+    const gameChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Crypto Price',
+          data: dataPoints,
+          borderColor: 'lime',
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3
+        }]
+      },
+      options: {
+        animation: false,
+        responsive: true,
+        scales: {
+          y: { beginAtZero: false }
+        }
+      }
+    });
+
+    // Graph update every second
+    let lastPrice = dataPoints[dataPoints.length - 1];
+    setInterval(() => {
+      labels.shift();
+      dataPoints.shift();
+      const change = (Math.random() * 10 - 5); // -5 to +5
+      lastPrice = Math.max(10, Math.floor(lastPrice + change));
+      labels.push((parseInt(labels[labels.length - 1]) + 1).toString());
+      dataPoints.push(lastPrice);
+      gameChart.update();
+    }, 1000);
+
+    // Prediction
+    let currentPrediction = null;
+    let predictedPrice = null;
+
+    function predict(direction) {
+      if (currentPrediction) {
+        alert("⏳ Wait for result before placing new prediction!");
+        return;
+      }
+
+      currentPrediction = direction;
+      predictedPrice = lastPrice;
+      alert("✅ Prediction placed: " + direction.toUpperCase());
+
+      // After 5 seconds check result
+      setTimeout(() => {
+        if ((direction === "up" && lastPrice > predictedPrice) ||
+            (direction === "down" && lastPrice < predictedPrice)) {
+          balance += 10;
+          alert("🎉 You Won! +$10");
+        } else {
+          balance -= 10;
+          alert("❌ You Lost! -$10");
+        }
+        document.getElementById("balance").innerText = balance;
+        localStorage.setItem("balance", balance);
+        currentPrediction = null;
+      }, 5000);
+    }
+  </script>
 </body>
 </html>
