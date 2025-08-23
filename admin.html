@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; text-align: center; }
+    .container { max-width: 500px; margin: 100px auto; background: #1e293b; padding: 30px; border-radius: 12px; }
+    h1 { margin-bottom: 20px; }
+    input, button { padding: 10px; margin: 10px; border-radius: 6px; border: none; }
+    input { width: 80%; }
+    button { background: #3b82f6; color: white; cursor: pointer; }
+    button:hover { background: #2563eb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin Login</h1>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="error" style="color:red;"></p>
+  </div>
+
+  <script>
+    function login() {
+      let user = document.getElementById("username").value;
+      let pass = document.getElementById("password").value;
+
+      // 👇 yaha apna admin username / password set karo
+      if(user === "admin" && pass === "1234") {
+        window.location.href = "dashboard.html"; // Login ke baad dashboard khulega
+      } else {
+        document.getElementById("error").innerText = "Invalid username or password!";
+      }
+    }
+  </script>
+</body>
+</html>
