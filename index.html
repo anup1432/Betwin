@@ -1,463 +1,338 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Trading App - Persistent Live Graph</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>TradeLive — User</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg: #071017;
-      --card: #0e1620;
-      --muted: #9aa7b2;
-      --accent: #ff9800;
-      --green: #00d27a;
-      --red: #ff4d4f;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      background:linear-gradient(180deg,#031018 0%, #071017 100%);
-      color:#e6eef3;
-      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      display:flex;
-      justify-content:center;
-      padding:18px;
-      min-height:100vh;
-    }
-
-    .app {
-      width:100%;
-      max-width:1100px;
-    }
-
-    header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      margin-bottom:14px;
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .logo{
-      width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#ffb86b);display:flex;align-items:center;justify-content:center;font-weight:700;color:#061018;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.6);
-    }
-    h1{font-size:18px;margin:0}
-    p.sub{margin:0;color:var(--muted);font-size:13px}
-
-    /* Layout */
-    .grid{
-      display:grid;
-      grid-template-columns: 1fr 360px;
-      gap:16px;
-      align-items:start;
-    }
-    @media(max-width:980px){
-      .grid{ grid-template-columns: 1fr; }
-    }
-
-    /* Left column (graph + info) */
-    .card{
-      background:var(--card);
-      border-radius:14px;
-      padding:14px;
-      box-shadow: 0 8px 24px rgba(3,6,10,0.6);
-    }
-
-    .graph-wrap{ position:relative; overflow:hidden; border-radius:12px; padding:10px }
-    canvas{ width:100% !important; height:320px !important; display:block; border-radius:8px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.04)); }
-
-    .floating-price{
-      position:absolute; right:14px; top:14px; padding:8px 12px; border-radius:10px; background:rgba(3,8,12,0.6); backdrop-filter: blur(6px);
-      font-weight:600; display:flex; gap:8px; align-items:center;
-      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
-    }
-
-    .live-info{
-      display:flex;
-      gap:12px;
-      margin-top:12px;
-      justify-content:space-between;
-    }
-    .info-pill{
-      flex:1;
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-      padding:10px; border-radius:10px; text-align:center;
-    }
-    .info-pill small{display:block;color:var(--muted);font-size:12px}
-    .info-pill strong{display:block;margin-top:6px;font-size:16px}
-
-    /* Right column (controls) */
-    .right-col{ display:flex; flex-direction:column; gap:12px; }
-
-    .deposit {
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-    }
-    .wallet {
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.04));
-      padding:12px;border-radius:10px; flex:1;
-    }
-    .wallet small{display:block;color:var(--muted);font-size:12px}
-    .wallet .addr{font-weight:600; margin-top:6px; word-break:break-all; font-size:14px}
-
-    .btn {
-      background: linear-gradient(180deg,var(--accent), #ffb86b);
-      border:none; color:#061018; padding:10px 12px; border-radius:10px; cursor:pointer;font-weight:700;
-      box-shadow: 0 8px 14px rgba(255,152,0,0.12);
-    }
-    .btn.secondary{
-      background:transparent; border:1px solid rgba(255,255,255,0.04); color:var(--muted); box-shadow:none;
-    }
-
-    .three-doughts{
-      display:flex; gap:10px; margin-top:6px;
-    }
-    .dought{ flex:1; padding:10px; border-radius:10px; background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.03)); text-align:center }
-    .dought h4{ margin:0 0 6px 0; font-size:14px; color:#ffd76a }
-    .dought p{ margin:0; color:var(--muted); font-size:13px }
-
-    .bot{
-      display:flex; gap:12px; align-items:center; justify-content:center; margin-top:8px;
-    }
-    .bot .bot-btn{
-      flex:1; padding:12px 6px; font-size:16px; border-radius:10px; cursor:pointer; border:none; font-weight:700;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.5);
-    }
-    .up{ background: linear-gradient(180deg, rgba(0,210,122,0.12), rgba(0,210,122,0.18)); color:var(--green); border:1px solid rgba(0,210,122,0.14) }
-    .down{ background: linear-gradient(180deg, rgba(255,77,79,0.08), rgba(255,77,79,0.14)); color:var(--red); border:1px solid rgba(255,77,79,0.08) }
-
-    .small-center{ text-align:center; color:var(--muted); font-size:13px; margin-top:10px }
-
-    footer{ margin-top:14px; text-align:center; color:var(--muted); font-size:13px }
+    :root{--bg:#071017;--card:#0e1620;--muted:#9aa7b2;--accent:#ff9800;--green:#00d27a;--red:#ff4d4f}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#031018,#071017);font-family:Inter,system-ui;color:#e6eef3}
+    .wrap{max-width:1100px;margin:20px auto;padding:16px}
+    .top{display:flex;gap:12px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+    .card{background:var(--card);padding:12px;border-radius:12px;box-shadow:0 8px 24px rgba(3,6,10,0.6)}
+    .walletCard{display:flex;gap:10px;align-items:center;min-width:260px}
+    .addr{font-weight:700;word-break:break-all}
+    .btn{background:linear-gradient(180deg,var(--accent),#ffb86b);border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700;color:#061018}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .three{display:flex;gap:10px;margin-bottom:14px}
+    .d{flex:1;padding:10px;border-radius:10px;text-align:center;background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.03))}
+    input,select{width:100%;padding:8px;border-radius:8px;border:none;margin-top:8px}
+    .graphCard{height:380px;padding:12px;border-radius:12px;position:relative}
+    canvas{width:100%!important;height:300px!important;display:block;border-radius:8px;background:transparent}
+    .floating{position:absolute;right:18px;top:18px;background:rgba(2,8,12,0.6);padding:8px 10px;border-radius:10px;font-weight:700}
+    .small{font-size:13px;color:var(--muted)}
+    .status-pill{padding:6px 8px;border-radius:8px;font-weight:700}
+    @media(max-width:900px){ .three{flex-direction:column} .top{flex-direction:column;align-items:stretch} }
   </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <div class="brand">
-        <div class="logo">T</div>
+  <div class="wrap">
+
+    <!-- TOP: Wallet + quick controls -->
+    <div class="top">
+      <div class="card walletCard" style="flex:1;min-width:320px">
+        <div style="flex:1">
+          <div class="small">Deposit Wallet</div>
+          <div id="walletAddress" class="addr">0xYourWalletHereABC123</div>
+          <div class="small" style="margin-top:6px">Tip: send payment then submit txn id below</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn" id="copyBtn">Copy</button>
+          <button class="btn ghost" id="setWalletBtn">Change</button>
+        </div>
+      </div>
+
+      <div class="card" style="min-width:320px">
+        <div class="small">Your Latest Deposit</div>
+        <div id="yourDeposit" style="margin-top:8px;font-weight:700">No deposit submitted</div>
+        <div style="margin-top:8px"><small class="small">Status: <span id="yourStatus" class="status-pill">—</span></small></div>
+      </div>
+    </div>
+
+    <!-- Three Dought panels -->
+    <div class="three">
+      <div class="d card">
+        <div class="small">Deposit Request</div>
+        <input id="txnInput" placeholder="Paste transaction / Txn ID here" />
+        <button class="btn" id="submitTxn">Submit Txn</button>
+      </div>
+
+      <div class="d card">
+        <div class="small">Deposit History</div>
+        <div id="history" style="margin-top:8px;color:var(--muted)">No history yet</div>
+      </div>
+
+      <div class="d card">
+        <div class="small">Admin Info</div>
+        <div id="adminNote" style="margin-top:8px;color:var(--muted)">Deposits require admin approval</div>
+      </div>
+    </div>
+
+    <!-- Graph -->
+    <div class="card graphCard">
+      <canvas id="priceChart"></canvas>
+      <div class="floating" id="floatingPrice"><span id="priceArrow">▲</span>&nbsp;<span id="priceValue">$0.000</span></div>
+      <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center">
+        <div class="small">Points: <span id="pointCount">0</span></div>
         <div>
-          <h1>TradeLive — Demo</h1>
-          <p class="sub">Persistent live-like chart • localStorage • mobile friendly</p>
-        </div>
-      </div>
-      <div style="text-align:right">
-        <small class="sub">Status: <span id="statusText">Running</span></small>
-      </div>
-    </header>
-
-    <div class="grid">
-      <!-- LEFT: Graph + live info -->
-      <div>
-        <div class="card graph-wrap">
-          <canvas id="priceChart"></canvas>
-          <div class="floating-price" id="floatingPrice">
-            <span id="priceArrow">▲</span>
-            <span id="priceValue">$0.00</span>
-          </div>
-          <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;gap:8px">
-            <div style="display:flex;gap:8px">
-              <button class="btn secondary" id="pauseBtn">Pause</button>
-              <button class="btn secondary" id="resumeBtn" style="opacity:0.6">Resume</button>
-            </div>
-            <div style="color:var(--muted);font-size:13px">Points: <span id="pointCount">0</span></div>
-          </div>
-
-          <div class="live-info" style="margin-top:12px">
-            <div class="info-pill">
-              <small>Wins</small>
-              <strong id="wins">0</strong>
-            </div>
-            <div class="info-pill">
-              <small>Players</small>
-              <strong id="players">0</strong>
-            </div>
-            <div class="info-pill">
-              <small>Payout</small>
-              <strong id="payout">$0.00</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="small-center">Tip: Page refresh won't reset the graph points (saved in localStorage).</div>
-      </div>
-
-      <!-- RIGHT: Controls -->
-      <div class="right-col">
-        <div class="card deposit">
-          <div class="wallet">
-            <small>Deposit Wallet</small>
-            <div class="addr" id="walletAddress">0x1234...ABCD1234efgh</div>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <button class="btn" id="copyBtn">Copy</button>
-            <button class="btn secondary" id="changeAddr">Change</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="three-doughts">
-            <div class="dought">
-              <h4>Dought 1</h4><p id="d1">0.00</p>
-            </div>
-            <div class="dought">
-              <h4>Dought 2</h4><p id="d2">0.00</p>
-            </div>
-            <div class="dought">
-              <h4>Dought 3</h4><p id="d3">0.00</p>
-            </div>
-          </div>
-
-          <div class="bot" style="margin-top:12px">
-            <button class="bot-btn up" id="btnUp">UP</button>
-            <button class="bot-btn down" id="btnDown">DOWN</button>
-          </div>
-          <div class="small-center" style="margin-top:10px">
-            <small id="botHint">Bot: —</small>
-          </div>
-        </div>
-
-        <div class="card" style="text-align:center">
-          <button class="btn secondary" id="clearStorage">Clear Graph Data</button>
+          <button class="btn ghost" id="pauseBtn">Pause</button>
+          <button class="btn ghost" id="resumeBtn" style="opacity:.6">Resume</button>
         </div>
       </div>
     </div>
 
-    <footer>Made quick for you — run locally or drop on static host</footer>
   </div>
 
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script>
-    /*************** Persistent live-like price chart (localStorage) ***************/
+  /* ---------------------------
+     CONFIG: change if needed
+     --------------------------- */
+  const API_BASE = '/api';               // backend prefix
+  const STORAGE_KEY = 'tradelive_price_points_v1';
+  const WALLET_KEY = 'tradelive_user_wallet';
+  const USER_TXNS_KEY = 'tradelive_user_txns'; // store user's submitted txns locally
+  const UPDATE_MS = 900;
 
-    // Config
-    const STORAGE_KEY = 'tradelive_price_points_v1';
-    const MAX_POINTS = 120;            // how many points to keep
-    const UPDATE_MS = 900;            // new point every ~900ms
-    const SMOOTH_DURATION = 500;      // chart animation duration
+  /* ---------------------------
+     UI helpers
+     --------------------------- */
+  function el(id){return document.getElementById(id)}
+  function showToast(t){ alert(t) } // replace with fancy UI if you want
 
-    // Helpers
-    function loadPoints(){
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return null;
-        const pts = JSON.parse(raw);
-        if(Array.isArray(pts) && pts.length) return pts;
-      } catch(e){ console.warn('loadPoints err', e) }
-      return null;
+  /* ---------------------------
+     Wallet handling
+     --------------------------- */
+  const walletEl = el('walletAddress');
+  const copyBtn = el('copyBtn');
+  const setWalletBtn = el('setWalletBtn');
+
+  function loadWallet(){
+    const w = localStorage.getItem(WALLET_KEY) || walletEl.innerText;
+    walletEl.innerText = w;
+  }
+  loadWallet();
+
+  copyBtn.addEventListener('click', async ()=>{
+    try{
+      await navigator.clipboard.writeText(walletEl.innerText);
+      showToast('Wallet copied');
+    }catch(e){ showToast('Copy failed') }
+  });
+  setWalletBtn.addEventListener('click', ()=>{
+    const val = prompt('Set deposit wallet address:', walletEl.innerText);
+    if(val){ walletEl.innerText = val; localStorage.setItem(WALLET_KEY,val); }
+  });
+
+  /* ---------------------------
+     Deposit submit + history
+     --------------------------- */
+  const txnInput = el('txnInput');
+  const submitBtn = el('submitTxn');
+  const historyEl = el('history');
+  const yourDepositEl = el('yourDeposit');
+  const yourStatusEl = el('yourStatus');
+
+  function loadLocalTxns(){
+    try{
+      const raw = localStorage.getItem(USER_TXNS_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return [] }
+  }
+  function saveLocalTxns(arr){ localStorage.setItem(USER_TXNS_KEY, JSON.stringify(arr)) }
+
+  function renderHistory(){
+    const arr = loadLocalTxns();
+    if(!arr.length) { historyEl.innerText = 'No history yet'; return; }
+    historyEl.innerHTML = arr.slice().reverse().map(it=>`<div style="margin-bottom:6px"><strong>${it.txn}</strong><br/><small style="color:var(--muted)">Status: ${it.status} • ${new Date(it.ts).toLocaleString()}</small></div>`).join('');
+    // show last
+    const last = arr[arr.length-1];
+    yourDepositEl.innerText = last ? last.txn : 'No deposit submitted';
+    yourStatusEl.innerText = last ? last.status : '—';
+    yourStatusEl.style.color = last ? (last.status==='approved' ? 'lime' : last.status==='rejected' ? 'tomato' : 'orange') : 'var(--muted)';
+  }
+  renderHistory();
+
+  submitBtn.addEventListener('click', async ()=>{
+    const txn = txnInput.value.trim();
+    if(!txn){ showToast('Enter a transaction id'); return; }
+    const wallet = walletEl.innerText.trim();
+    // disable button while sending
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Submitting...';
+
+    try{
+      const res = await fetch(API_BASE + '/deposits', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ wallet, txn })
+      });
+      if(!res.ok) throw new Error('Network error');
+      const data = await res.json(); // expected { success:true, deposit: { id, wallet, txn, status, createdAt } }
+      // save locally
+      const arr = loadLocalTxns();
+      arr.push({ id: data.deposit.id || (data.deposit.txn||txn), txn: data.deposit.txn||txn, status: data.deposit.status||'pending', ts: Date.now() });
+      saveLocalTxns(arr);
+      renderHistory();
+      txnInput.value = '';
+      showToast('Txn submitted — awaiting admin approval');
+    }catch(err){
+      console.error(err);
+      showToast('Submit failed');
+    }finally{
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Submit Txn';
     }
-    function savePoints(arr){
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
-      catch(e){ console.warn('savePoints err', e) }
+  });
+
+  /* ---------------------------
+     Real-time deposit status updates
+     Try SSE at /api/stream (server-sent events)
+     Fallback to polling /api/deposits?wallet=...
+     --------------------------- */
+  async function fetchStatusesOnce(){
+    try{
+      const wallet = walletEl.innerText.trim();
+      const r = await fetch(API_BASE + '/deposits?wallet=' + encodeURIComponent(wallet));
+      if(!r.ok) return;
+      const list = await r.json(); // expected array of deposits for wallet
+      // merge into local store
+      const local = loadLocalTxns();
+      const mapped = local.map(l=>{
+        const found = list.find(x => x.txn === l.txn || x.id === l.id);
+        if(found){ l.status = found.status; }
+        return l;
+      });
+      saveLocalTxns(mapped);
+      renderHistory();
+    }catch(e){ console.warn('poll err', e) }
+  }
+
+  // SSE connection
+  let sse;
+  function startSSE(){
+    if(typeof(EventSource) === 'undefined') return false;
+    try{
+      sse = new EventSource(API_BASE + '/stream'); // server should emit events like: event: deposit-updated\ndata: {...}
+      sse.onmessage = e => {
+        // generic message — try parse
+        try{
+          const d = JSON.parse(e.data);
+          if(d.type === 'deposit-updated' && d.deposit){
+            // update local store if matches wallet
+            const wallet = walletEl.innerText.trim();
+            if(d.deposit.wallet === wallet){
+              const local = loadLocalTxns();
+              const foundIdx = local.findIndex(x => x.txn === d.deposit.txn || x.id === d.deposit.id);
+              if(foundIdx >= 0){ local[foundIdx].status = d.deposit.status; }
+              else { local.push({ id:d.deposit.id, txn:d.deposit.txn, status:d.deposit.status, ts: Date.now() }); }
+              saveLocalTxns(local); renderHistory();
+            }
+          }
+        }catch(e){ console.warn('sse parse', e) }
+      };
+      sse.onerror = err => {
+        console.warn('SSE error', err);
+        // try fallback polling after a while
+        sse.close();
+        setTimeout(()=> pollLoop(), 2000);
+      };
+      return true;
+    }catch(e){
+      console.warn('SSE start failed', e);
+      return false;
     }
+  }
 
-    // Seed if none
-    let points = loadPoints() || (function seed(){
-      // create a smooth-ish seed series — less jumpy
-      const start = 100 + Math.random()*6;
-      const arr=[start];
-      for(let i=1;i<40;i++){
-        const last = arr[arr.length-1];
-        const change = (Math.random()-0.4)*1.2; // small drift
-        arr.push(Math.max(1, +(last+change).toFixed(3)));
-      }
-      savePoints(arr);
-      return arr;
-    })();
+  // Poll fallback
+  let pollTimer;
+  function pollLoop(){
+    clearInterval(pollTimer);
+    pollTimer = setInterval(fetchStatusesOnce, 3000);
+    // also run once immediately
+    fetchStatusesOnce();
+  }
 
-    // Chart setup
-    const ctx = document.getElementById('priceChart').getContext('2d');
+  // Try SSE; if not supported or fails, start polling
+  (async ()=> {
+    const ok = startSSE();
+    if(!ok) pollLoop();
+  })();
 
-    function makeGradient(up=true){
-      const g = ctx.createLinearGradient(0,0,0,320);
-      if(up){
-        g.addColorStop(0, 'rgba(0,210,122,0.16)');
-        g.addColorStop(1, 'rgba(0,210,122,0.02)');
-      } else {
-        g.addColorStop(0, 'rgba(255,77,79,0.12)');
-        g.addColorStop(1, 'rgba(255,77,79,0.02)');
-      }
-      return g;
-    }
+  /* ---------------------------
+     Graph (persistent) - same generator as earlier
+     --------------------------- */
+  const ctx = document.getElementById('priceChart').getContext('2d');
 
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: points.map((_,i)=>i),
-        datasets: [{
-          data: points,
-          borderWidth: 2.5,
-          borderColor: points.length>1 && (points[points.length-1] >= points[points.length-2]) ? '#00d27a' : '#ff4d4f',
-          backgroundColor: makeGradient(points.length>1 && (points[points.length-1] >= points[points.length-2])),
-          fill: true,
-          tension: 0.35,
-          pointRadius: 0,
-          pointHoverRadius: 4,
-        }]
-      },
-      options: {
-        animation: { duration: SMOOTH_DURATION, easing: 'linear' },
-        plugins: { legend:{display:false}, tooltip:{enabled:false} },
-        scales: {
-          x: { display:false },
-          y: { display:false }
-        },
-        responsive:true,
-        maintainAspectRatio:false,
-      }
-    });
+  function loadPoints(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+  function savePoints(arr){ localStorage.setItem(STORAGE_KEY, JSON.stringify(arr)); }
 
-    // UI Elements
-    const priceValue = document.getElementById('priceValue');
-    const priceArrow = document.getElementById('priceArrow');
-    const pointCount = document.getElementById('pointCount');
-    const winsEl = document.getElementById('wins');
-    const playersEl = document.getElementById('players');
-    const payoutEl = document.getElementById('payout');
-    const statusText = document.getElementById('statusText');
+  let points = loadPoints() || (function seed(){
+    const start = 100 + Math.random()*6;
+    const a=[start];
+    for(let i=1;i<40;i++){ const last=a[a.length-1]; const change=(Math.random()-0.4)*1.2; a.push(Math.max(1, +(last+change).toFixed(3))); }
+    savePoints(a); return a;
+  })();
 
-    function refreshUI(){
-      const last = points[points.length-1];
-      const prev = points.length>1 ? points[points.length-2] : last;
-      const up = last >= prev;
-      priceValue.innerText = '$' + (+last).toFixed(3);
-      priceArrow.innerText = up ? '▲' : '▼';
-      priceArrow.style.color = up ? '#00d27a' : '#ff4d4f';
-      priceValue.style.color = up ? '#b8ffd3' : '#ffd6d6';
-      pointCount.innerText = points.length;
-      // Live info random-ish but stable between refreshes
-      winsEl.innerText = Math.floor(10 + (last % 100) * 0.9);
-      playersEl.innerText = Math.floor(5 + (last % 50) * 0.6);
-      payoutEl.innerText = '$' + ( (last % 250) * 3.14 ).toFixed(2);
-    }
+  function makeGradient(up=true){
+    const g = ctx.createLinearGradient(0,0,0,320);
+    if(up){ g.addColorStop(0,'rgba(0,210,122,0.16)'); g.addColorStop(1,'rgba(0,210,122,0.02)'); }
+    else { g.addColorStop(0,'rgba(255,77,79,0.12)'); g.addColorStop(1,'rgba(255,77,79,0.02)'); }
+    return g;
+  }
+
+  const chart = new Chart(ctx, {
+    type:'line',
+    data:{ labels:points.map((_,i)=>i), datasets:[{ data:points, borderWidth:2.5, borderColor:'#00d27a', backgroundColor:makeGradient(true), fill:true, tension:0.35, pointRadius:0 }] },
+    options:{ animation:{duration:400,easing:'linear'}, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false},y:{display:false}}, responsive:true, maintainAspectRatio:false }
+  });
+
+  function refreshUI(){
+    const last = points[points.length-1], prev = points.length>1?points[points.length-2]:last, up = last >= prev;
+    el('priceValue').innerText = '$' + (+last).toFixed(3);
+    el('priceArrow').innerText = up ? '▲' : '▼';
+    el('priceArrow').style.color = up ? '#00d27a' : '#ff4d4f';
+    el('pointCount').innerText = points.length;
+  }
+  refreshUI();
+
+  function generateNext(){
+    const last = points[points.length-1];
+    const drift = (Math.random()-0.52)*0.25;
+    const noise = (Math.random()-0.5)*0.6;
+    const spike = (Math.random() < 0.03) ? (Math.random()*4 - 2) : 0;
+    return Math.max(0.01, +(last + drift + noise + spike).toFixed(3));
+  }
+
+  let paused = false;
+  function pushPoint(){
+    const next = generateNext();
+    points.push(next);
+    if(points.length > 120) points.shift();
+    savePoints(points);
+    chart.data.labels = points.map((_,i)=>i);
+    chart.data.datasets[0].data = points;
+    const up = points[points.length-1] >= points[points.length-2];
+    chart.data.datasets[0].borderColor = up ? '#00d27a' : '#ff4d4f';
+    chart.data.datasets[0].backgroundColor = makeGradient(up);
+    chart.update('active');
     refreshUI();
+  }
 
-    // Update logic: append new point while keeping smoothness
-    let paused = false;
-    let lastTick = Date.now();
+  let ticker = setInterval(()=>{ if(!paused) pushPoint(); }, UPDATE_MS);
+  el('pauseBtn').addEventListener('click', ()=>{ paused=true; el('pauseBtn').style.opacity=.6; el('resumeBtn').style.opacity=1 });
+  el('resumeBtn').addEventListener('click', ()=>{ paused=false; el('pauseBtn').style.opacity=1; el('resumeBtn').style.opacity=.6 });
 
-    function generateNext(){
-      const last = points[points.length-1];
-      // create a realistic movement: a mixture of drift + noise + occasional spike
-      const drift = (Math.random() - 0.52) * 0.25;              // small drift
-      const noise = (Math.random() - 0.5) * 0.6;               // jitter
-      const spike = (Math.random() < 0.03) ? (Math.random()*4 - 2) : 0; // rare spike
-      const next = Math.max(0.01, +(last + drift + noise + spike).toFixed(3));
-      return next;
-    }
-
-    function pushPoint(){
-      const next = generateNext();
-      points.push(next);
-      if(points.length > MAX_POINTS) points.shift();
-      savePoints(points);
-
-      // update chart dataset
-      chart.data.labels = points.map((_,i)=>i);
-      chart.data.datasets[0].data = points;
-
-      // color based on last move
-      const up = points[points.length-1] >= points[points.length-2];
-      chart.data.datasets[0].borderColor = up ? '#00d27a' : '#ff4d4f';
-      chart.data.datasets[0].backgroundColor = makeGradient(up);
-
-      chart.update('active'); // smooth update
-      refreshUI();
-    }
-
-    // Start periodic updates
-    let timer = setInterval(()=> {
-      if(!paused) pushPoint();
-    }, UPDATE_MS);
-
-    // Controls
-    document.getElementById('pauseBtn').addEventListener('click', ()=> {
-      paused = true;
-      statusText.innerText = 'Paused';
-      document.getElementById('pauseBtn').style.opacity = 0.6;
-      document.getElementById('resumeBtn').style.opacity = 1;
-    });
-    document.getElementById('resumeBtn').addEventListener('click', ()=> {
-      paused = false;
-      statusText.innerText = 'Running';
-      document.getElementById('pauseBtn').style.opacity = 1;
-      document.getElementById('resumeBtn').style.opacity = 0.6;
-    });
-
-    // Copy wallet
-    document.getElementById('copyBtn').addEventListener('click', async ()=>{
-      const txt = document.getElementById('walletAddress').innerText;
-      try {
-        await navigator.clipboard.writeText(txt);
-        alert('Copied: ' + txt);
-      } catch(e){
-        alert('Copy failed, man — manually copy: ' + txt);
-      }
-    });
-
-    // Change wallet (quick prompt)
-    document.getElementById('changeAddr').addEventListener('click', ()=>{
-      const current = document.getElementById('walletAddress').innerText;
-      const val = prompt('Enter new wallet address:', current);
-      if(val) document.getElementById('walletAddress').innerText = val;
-    });
-
-    // Bot prediction buttons
-    document.getElementById('btnUp').addEventListener('click', ()=> {
-      document.getElementById('botHint').innerText = 'Bot predicts: UP (confidence 78%)';
-      // quick flash effect
-      flashBorder('#00d27a');
-    });
-    document.getElementById('btnDown').addEventListener('click', ()=> {
-      document.getElementById('botHint').innerText = 'Bot predicts: DOWN (confidence 64%)';
-      flashBorder('#ff4d4f');
-    });
-
-    function flashBorder(color){
-      const el = document.querySelector('.graph-wrap');
-      el.style.boxShadow = `0 8px 30px ${hexToRgba(color,0.12)}`;
-      setTimeout(()=> el.style.boxShadow = '0 8px 24px rgba(3,6,10,0.6)', 420);
-    }
-    function hexToRgba(hex, a=1){
-      hex = hex.replace('#','');
-      const r = parseInt(hex.substring(0,2),16);
-      const g = parseInt(hex.substring(2,4),16);
-      const b = parseInt(hex.substring(4,6),16);
-      return `rgba(${r},${g},${b},${a})`;
-    }
-
-    // Clear storage button
-    document.getElementById('clearStorage').addEventListener('click', ()=>{
-      if(confirm('Clear saved graph points? This will reset persisted history.')){
-        localStorage.removeItem(STORAGE_KEY);
-        location.reload();
-      }
-    });
-
-    // Keep UI updated if user left the tab and come back (resync)
-    document.addEventListener('visibilitychange', ()=> {
-      if(!document.hidden){
-        // reload points from storage (maybe changed in another tab)
-        const remote = loadPoints();
-        if(remote && remote.length){
-          points = remote;
-          chart.data.datasets[0].data = points;
-          chart.update();
-          refreshUI();
-        }
-      }
-    });
-
-    // Initial UI ensure
-    document.getElementById('pointCount').innerText = points.length;
+  /* initial load of statuses for this wallet */
+  fetchStatusesOnce();
+  renderHistory();
   </script>
 </body>
 </html>
