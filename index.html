@@ -1,140 +1,272 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BetWin Game</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>BetWin – Crypto Prediction</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body {
-      background: #0d1117;
-      color: #fff;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 20px;
-    }
-    canvas {
-      max-width: 600px;
-      margin: 20px auto;
-      display: block;
-      background: #111;
-      border: 2px solid #444;
-      border-radius: 10px;
-    }
-    button {
-      margin: 10px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      background: limegreen;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    button:hover {
-      opacity: 0.9;
-    }
+    :root{--bg:#0d1117;--panel:#111827;--border:#30363d;--text:#e5e7eb;--muted:#94a3b8;--up:#22c55e;--down:#ef4444}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,Segoe UI,Roboto,Arial}
+    header{padding:16px;border-bottom:1px solid var(--border);text-align:center}
+    h1{margin:0;font-size:20px}
+    main{max-width:1000px;margin:18px auto;padding:0 14px;display:grid;gap:16px}
+    .card{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .between{justify-content:space-between}
+    .balance{font-weight:700}
+    .tag{font-size:12px;border:1px solid var(--border);padding:4px 8px;border-radius:999px;color:var(--muted)}
+    canvas{width:100%;max-width:860px;background:#0f172a;border:1px solid var(--border);border-radius:10px}
+    .btn{border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer}
+    .btn-up{background:var(--up);color:#06280d}
+    .btn-down{background:var(--down);color:#fff}
+    .btn-ghost{background:#0b1220;color:var(--text);border:1px solid var(--border)}
+    .stat{font-size:14px;color:var(--muted)}
+    .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+    input,select{width:100%;background:#0b1220;color:var(--text);border:1px solid var(--border);border-radius:8px;padding:10px 12px;outline:none}
+    input::placeholder{color:#6b7280}
+    .label{font-size:12px;color:var(--muted);margin-bottom:4px}
+    .hr{height:1px;background:var(--border);margin:12px 0}
+    .qr{width:160px;height:160px;border:1px solid var(--border);border-radius:10px;background:#0b1220;object-fit:contain}
+    .faq .q{width:100%;text-align:left;background:#0b1220;border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:8px;cursor:pointer}
+    .faq .a{display:none;padding:10px 12px;background:#0f172a;border:1px solid var(--border);border-radius:8px}
+    .success{color:#4ade80}.error{color:#f87171}
+    .warn{color:#fbbf24;font-size:12px}
   </style>
 </head>
 <body>
+<header>
+  <h1>BetWin – Crypto Prediction Game</h1>
+</header>
 
-  <h1>BetWin Crypto Game</h1>
-  <canvas id="gameChart" width="400" height="200"></canvas>
-  <p>Balance: $<span id="balance"></span></p>
+<main>
+  <!-- GAME -->
+  <section class="card">
+    <div class="row between">
+      <div class="balance">Balance: $<span id="balance">100</span></div>
+      <div class="row">
+        <span class="tag">Demo</span>
+        <span class="tag">Graph persists on refresh</span>
+      </div>
+    </div>
 
-  <button onclick="predict('up')">Predict UP 📈</button>
-  <button onclick="predict('down')">Predict DOWN 📉</button>
+    <canvas id="gameChart" height="220"></canvas>
 
-  <script>
-    const ctx = document.getElementById('gameChart').getContext('2d');
+    <div class="row" style="margin-top:12px">
+      <button class="btn btn-up" onclick="predict('up')">Predict UP 📈</button>
+      <button class="btn btn-down" onclick="predict('down')">Predict DOWN 📉</button>
+      <span id="gameStatus" class="stat"></span>
+    </div>
+  </section>
 
-    // Balance system
-    let balance = localStorage.getItem("balance") ? parseInt(localStorage.getItem("balance")) : 100;
-    document.getElementById("balance").innerText = balance;
+  <!-- WALLET -->
+  <section class="card">
+    <h3 style="margin:6px 0 12px">Wallet</h3>
+    <div class="grid">
+      <div>
+        <div class="label">Select Network</div>
+        <select id="chain" onchange="updateDepositUI()">
+          <option value="bep20">BEP20 (BNB Smart Chain)</option>
+          <option value="polygon">Polygon (PoS)</option>
+          <option value="ton">TON</option>
+        </select>
+      </div>
 
-    // Load saved graph data or create new
-    let savedData = JSON.parse(localStorage.getItem("graphData"));
-    let labels = savedData ? savedData.labels : [];
-    let dataPoints = savedData ? savedData.dataPoints : [];
-    let lastPrice = savedData ? savedData.lastPrice : 100;
+      <div>
+        <div class="label">Deposit Address</div>
+        <input id="depositAddress" type="text" readonly />
+        <div id="addrWarn" class="warn"></div>
+      </div>
 
-    if (labels.length === 0) {
-      for (let i = 0; i < 20; i++) {
-        labels.push(i.toString());
-        dataPoints.push(Math.floor(Math.random() * 100) + 50);
-      }
-      lastPrice = dataPoints[dataPoints.length - 1];
-    }
+      <div class="row">
+        <button class="btn btn-ghost" onclick="copyAddress()">Copy Address</button>
+        <a id="explorerLink" class="btn btn-ghost" style="text-decoration:none" target="_blank" rel="noopener">Open in Explorer</a>
+      </div>
 
-    const gameChart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Crypto Price',
-          data: dataPoints,
-          borderColor: 'lime',
-          borderWidth: 2,
-          fill: false,
-          tension: 0.3
-        }]
-      },
-      options: {
-        animation: false,
-        responsive: true,
-        scales: {
-          y: { beginAtZero: false }
-        }
-      }
-    });
+      <div>
+        <div class="label">QR Code</div>
+        <img id="qr" class="qr" alt="QR">
+      </div>
+    </div>
 
-    // Graph update every second
-    setInterval(() => {
-      labels.shift();
-      dataPoints.shift();
-      const change = (Math.random() * 10 - 5); // -5 to +5
-      lastPrice = Math.max(10, Math.floor(lastPrice + change));
-      labels.push((parseInt(labels[labels.length - 1]) + 1).toString());
-      dataPoints.push(lastPrice);
-      gameChart.update();
+    <div class="hr"></div>
 
-      // Save graph data to localStorage
-      localStorage.setItem("graphData", JSON.stringify({
-        labels: labels,
-        dataPoints: dataPoints,
-        lastPrice: lastPrice
-      }));
-    }, 1000);
+    <div class="grid">
+      <div>
+        <div class="label">Withdraw To (your wallet)</div>
+        <input id="withdrawTo" type="text" placeholder="Paste your wallet address">
+      </div>
+      <div>
+        <div class="label">Amount (USDT)</div>
+        <input id="withdrawAmount" type="number" min="1" step="1" placeholder="Amount">
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" onclick="requestWithdraw()">Request Withdraw</button>
+        <span id="walletMsg" class="stat"></span>
+      </div>
+    </div>
 
-    // Prediction system
-    let currentPrediction = null;
-    let predictedPrice = null;
+    <p class="stat" style="margin-top:8px">
+      Real on-chain transfers require a backend (admin approval + private key in .env). Ye page sirf safe UI/requests handle karta hai.
+    </p>
+  </section>
 
-    function predict(direction) {
-      if (currentPrediction) {
-        alert("⏳ Wait for result before placing new prediction!");
-        return;
-      }
+  <!-- FAQ -->
+  <section class="card faq">
+    <h3 style="margin:6px 0 12px">Three Common Doubts</h3>
+    <button class="q" onclick="toggleFaq(0)">How do I win?</button>
+    <div class="a">UP choose karein agar agla tick zyada hoga; DOWN agar kam. 5 second me settle hota hai.</div>
 
-      currentPrediction = direction;
-      predictedPrice = lastPrice;
-      alert("✅ Prediction placed: " + direction.toUpperCase());
+    <button class="q" onclick="toggleFaq(1)">Is it real money?</button>
+    <div class="a">BEP20 / Polygon / TON deposit address diya hai. Real transfer ke liye backend confirm karta hai.</div>
 
-      setTimeout(() => {
-        if ((direction === "up" && lastPrice > predictedPrice) ||
-            (direction === "down" && lastPrice < predictedPrice)) {
-          balance += 10;
-          alert("🎉 You Won! +$10");
-        } else {
-          balance -= 10;
-          alert("❌ You Lost! -$10");
-        }
-        document.getElementById("balance").innerText = balance;
-        localStorage.setItem("balance", balance);
-        currentPrediction = null;
-      }, 5000);
-    }
-  </script>
+    <button class="q" onclick="toggleFaq(2)">Can I withdraw?</button>
+    <div class="a">Withdraw request yahin se bhejein. Admin backend se approve karke on-chain bhejega.</div>
+  </section>
+</main>
 
+<script>
+/* ---------- Persistent Balance ---------- */
+let balance = parseInt(localStorage.getItem("balance") || "100", 10);
+const balanceEl = document.getElementById("balance");
+balanceEl.textContent = balance;
+
+/* ---------- Graph (Persistent) ---------- */
+const ctx = document.getElementById('gameChart').getContext('2d');
+let saved = JSON.parse(localStorage.getItem("graphData") || "null");
+let labels = saved?.labels || [];
+let dataPoints = saved?.dataPoints || [];
+let lastPrice = Number.isFinite(saved?.lastPrice) ? saved.lastPrice : 100;
+
+if (!labels.length) {
+  for (let i = 0; i < 40; i++) {
+    labels.push(String(i));
+    dataPoints.push(80 + Math.round(Math.random() * 40));
+  }
+  lastPrice = dataPoints[dataPoints.length - 1];
+}
+
+const chart = new Chart(ctx, {
+  type: 'line',
+  data: { labels, datasets: [{ label:'Crypto Price', data:dataPoints, borderColor:'lime', borderWidth:2, fill:false, tension:0.3 }]},
+  options: { animation:false, responsive:true, scales:{ y:{ beginAtZero:false }}}
+});
+
+setInterval(() => {
+  labels.shift(); dataPoints.shift();
+  const change = (Math.random()*10 - 5);
+  lastPrice = Math.max(10, Math.round(lastPrice + change));
+  labels.push(String(parseInt(labels[labels.length-1]) + 1));
+  dataPoints.push(lastPrice);
+  chart.update();
+  localStorage.setItem("graphData", JSON.stringify({ labels, dataPoints, lastPrice }));
+}, 1000);
+
+/* ---------- Prediction ---------- */
+let currentPrediction = null, lockPrice = null;
+const statusEl = document.getElementById("gameStatus");
+
+function predict(dir){
+  if(currentPrediction){ alert("Wait for result…"); return; }
+  currentPrediction = dir;
+  lockPrice = lastPrice;
+  statusEl.textContent = "Prediction: "+dir.toUpperCase()+" (settles in 5s)";
+  setTimeout(() => {
+    const win = (dir==='up' && lastPrice>lockPrice) || (dir==='down' && lastPrice<lockPrice);
+    if(win){ balance += 10; toast("You WON +$10","success"); }
+    else { balance -= 10; toast("You LOST -$10","error"); }
+    localStorage.setItem("balance", balance);
+    balanceEl.textContent = balance;
+    statusEl.textContent = "Ready";
+    currentPrediction = null; lockPrice = null;
+  }, 5000);
+}
+function toast(msg,type){ statusEl.textContent=msg; statusEl.className="stat "+(type==="success"?"success":"error"); setTimeout(()=>{statusEl.textContent=""; statusEl.className="stat"},2500); }
+window.predict = predict;
+
+/* ---------- Wallet UI (Multi-chain) ---------- */
+const ADDRS = {
+  bep20:  "0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44",
+  polygon:"0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B4",   // ⚠️ seems 1 char short
+  ton:    "EQAj7vKLbaWjaNbAuAKP1e1HwmdYZ2vJ2xtWU8qq3JafkfxF"
+};
+const EXPLORER = {
+  bep20:  (a) => "https://bscscan.com/address/"+encodeURIComponent(a),
+  polygon:(a) => "https://polygonscan.com/address/"+encodeURIComponent(a),
+  ton:    (a) => "https://tonviewer.com/"+encodeURIComponent(a)
+};
+
+const chainSel = document.getElementById("chain");
+const depAddr = document.getElementById("depositAddress");
+const addrWarn = document.getElementById("addrWarn");
+const qrImg = document.getElementById("qr");
+const explorerLink = document.getElementById("explorerLink");
+
+function isLikelyEthAddress(a){ return /^0x[a-fA-F0-9]{40}$/.test(a); }
+function isTon(a){ return /^([A-Za-z0-9_-]{48,55})$/.test(a); }
+
+function updateDepositUI(){
+  const c = chainSel.value;
+  const addr = ADDRS[c] || "";
+  depAddr.value = addr;
+  // validation + warning
+  addrWarn.textContent = "";
+  if(c==="bep20" || c==="polygon"){
+    if(!isLikelyEthAddress(addr)) addrWarn.textContent = "⚠️ Address format invalid. Ethereum/Polygon address must be 42 chars (0x + 40 hex).";
+  } else if(c==="ton"){
+    if(!isTon(addr)) addrWarn.textContent = "⚠️ TON address format looks unusual; please verify.";
+  }
+  // QR + explorer
+  qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=160x160&data="+encodeURIComponent(addr);
+  explorerLink.href = EXPLORER[c](addr);
+  explorerLink.textContent = "Open in Explorer";
+  localStorage.setItem("selected_chain", c);
+}
+window.updateDepositUI = updateDepositUI;
+
+function copyAddress(){
+  if(!depAddr.value){ alert("No address"); return; }
+  navigator.clipboard.writeText(depAddr.value);
+  toast("Address copied","success");
+}
+window.copyAddress = copyAddress;
+
+// init selected chain
+chainSel.value = localStorage.getItem("selected_chain") || "bep20";
+updateDepositUI();
+
+/* ---------- Withdraw (Frontend request queue) ---------- */
+const withdrawTo = document.getElementById("withdrawTo");
+const withdrawAmount = document.getElementById("withdrawAmount");
+const walletMsg = document.getElementById("walletMsg");
+
+function requestWithdraw(){
+  const chain = chainSel.value;
+  const to = (withdrawTo.value||"").trim();
+  const amt = parseFloat(withdrawAmount.value||"0");
+  if(!to || !amt || amt<=0){
+    walletMsg.textContent = "Enter valid address & amount.";
+    walletMsg.className = "stat error";
+    return;
+  }
+  const q = JSON.parse(localStorage.getItem("withdraw_queue")||"[]");
+  q.push({ id: Date.now(), chain, to, amount: amt });
+  localStorage.setItem("withdraw_queue", JSON.stringify(q));
+  walletMsg.textContent = "Withdraw request submitted. Admin will approve on backend.";
+  walletMsg.className = "stat success";
+  withdrawAmount.value = "";
+  // Real app: POST to backend
+  // fetch('/backend/withdraw',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chain,to,amount:amt})})
+}
+window.requestWithdraw = requestWithdraw;
+
+/* ---------- FAQ ---------- */
+function toggleFaq(i){
+  const answers = document.querySelectorAll('.faq .a');
+  const a = answers[i]; if(!a) return; a.style.display = a.style.display==='block'?'none':'block';
+}
+window.toggleFaq = toggleFaq;
+</script>
 </body>
 </html>
