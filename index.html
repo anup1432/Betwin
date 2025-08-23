@@ -1,151 +1,100 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BetWin Demo</title>
-  <style>
-    body{font-family:Inter, Arial;margin:0;background:#0f1720;color:#e6eef6}
-    .container{max-width:420px;margin:12px auto;padding:12px}
-    .card{background:#0b1220;border-radius:12px;padding:12px;margin-bottom:12px}
-    .timer{font-size:38px;text-align:center}
-    .up{background:linear-gradient(180deg,#07341a44,#042d14);border:1px solid rgba(20,200,120,0.08);padding:8px}
-    .down{background:linear-gradient(180deg,#4b0f0f44,#2a0a0a);border:1px solid rgba(255,80,80,0.06);padding:8px}
-    .players{display:flex;gap:8px;flex-wrap:wrap}
-    .player{padding:6px 8px;border-radius:8px;background:rgba(255,255,255,0.03);font-size:13px}
-    .green{color:#a6f4c5}
-    .red{color:#ffa8a8}
-    .controls{display:flex;gap:8px;justify-content:center;margin-top:8px}
-    .btn{padding:8px 12px;border-radius:8px;cursor:pointer}
-    .btn.up{background:#0ea45a;color:#022a12}
-    .btn.down{background:#e14b4b;color:#2b0b0b}
-    .small{font-size:12px;color:#9aa7b2}
-    .chart-placeholder{height:160px;background:linear-gradient(#0b1418,#082029);border-radius:8px;margin:8px 0;position:relative}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BetWin Crypto Prediction</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <div class="container">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <div class="small">BTC</div>
-          <div id="livePrice" class="small">Live 117,000.00</div>
-        </div>
-        <div class="timer" id="timer">--s</div>
-      </div>
 
-      <div class="chart-placeholder" id="chart">
-        <!-- simple fake chart line could be drawn via canvas; for demo we keep placeholder -->
-      </div>
-
-      <div style="display:flex;gap:8px">
-        <div style="flex:1" class="up card">
-          <div class="small">Up Wins</div>
-          <div id="upTotal" class="green">$0.00</div>
-          <div id="upPlayers" class="players"></div>
-        </div>
-
-        <div style="flex:1" class="down card">
-          <div class="small">Down Wins</div>
-          <div id="downTotal" class="red">$0.00</div>
-          <div id="downPlayers" class="players"></div>
-        </div>
-      </div>
-
-      <div class="controls">
-        <button id="betUp" class="btn up">Up</button>
-        <button id="betDown" class="btn down">Down</button>
-      </div>
-
-      <div class="small" style="text-align:center;margin-top:8px">Place bet demo: press Up/Down to simulate a real player</div>
+  <!-- Header -->
+  <header>
+    <div class="container">
+      <h1>BetWin Crypto Prediction</h1>
+      <nav>
+        <ul>
+          <li><a href="#home">Home</a></li>
+          <li><a href="#game">Game</a></li>
+          <li><a href="#leaderboard">Leaderboard</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </nav>
     </div>
+  </header>
 
-    <div class="small">Status: <span id="status">connecting...</span></div>
-  </div>
+  <!-- Hero Section -->
+  <section id="home" class="hero">
+    <div class="container">
+      <h2>Predict Crypto Prices & Earn Rewards!</h2>
+      <p>Click "Start Prediction" to play and win real crypto rewards.</p>
+      <a href="#game" class="btn">Start Prediction</a>
+    </div>
+  </section>
 
-  <script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
-  <script>
-    const SERVER = 'http://localhost:4000'; // change to your backend URL
-    const socket = io(SERVER);
+  <!-- Game Section -->
+  <section id="game">
+    <div class="container">
+      <h2>Crypto Prediction Game</h2>
+      <div class="balance">
+        <p>Your Balance: <span id="user-balance">0.00 BTC</span></p>
+        <button id="deposit-btn">Deposit</button>
+        <button id="withdraw-btn">Withdraw</button>
+      </div>
+      <div class="prediction">
+        <h3>Predict Bitcoin Price</h3>
+        <p>Round ends in: <span id="timer">00:00</span></p>
+        <button id="up-btn">UP 🔺</button>
+        <button id="down-btn">DOWN 🔻</button>
+      </div>
+      <div class="graph">
+        <h3>Price Graph</h3>
+        <canvas id="crypto-graph" width="600" height="300"></canvas>
+      </div>
+    </div>
+  </section>
 
-    const timerEl = document.getElementById('timer');
-    const upPlayersEl = document.getElementById('upPlayers');
-    const downPlayersEl = document.getElementById('downPlayers');
-    const upTotalEl = document.getElementById('upTotal');
-    const downTotalEl = document.getElementById('downTotal');
-    const statusEl = document.getElementById('status');
+  <!-- Leaderboard Section -->
+  <section id="leaderboard">
+    <div class="container">
+      <h2>Leaderboard</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Player</th>
+            <th>Wins</th>
+            <th>Total Earnings</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+          <!-- JS will populate -->
+        </tbody>
+      </table>
+    </div>
+  </section>
 
-    let currentRound = null;
+  <!-- Contact Section -->
+  <section id="contact">
+    <div class="container">
+      <h2>Contact Us</h2>
+      <form id="contact-form">
+        <input type="text" name="name" placeholder="Your Name" required>
+        <input type="email" name="email" placeholder="Your Email" required>
+        <textarea name="message" placeholder="Your Message" required></textarea>
+        <button type="submit">Send Message</button>
+      </form>
+    </div>
+  </section>
 
-    function renderBets(bets = []){
-      upPlayersEl.innerHTML = '';
-      downPlayersEl.innerHTML = '';
-      let totals = { up: 0, down: 0 };
-      bets.forEach(b => {
-        const el = document.createElement('div');
-        el.className = 'player';
-        el.innerText = `${b.name} $${b.amount}`;
-        if (b.side === 'up') { upPlayersEl.appendChild(el); totals.up += Number(b.amount); }
-        else { downPlayersEl.appendChild(el); totals.down += Number(b.amount); }
-      });
-      upTotalEl.innerText = `$${totals.up.toFixed(2)}`;
-      downTotalEl.innerText = `$${totals.down.toFixed(2)}`;
-    }
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 BetWin. All rights reserved.</p>
+    </div>
+  </footer>
 
-    socket.on('connect', () => {
-      statusEl.innerText = 'connected';
-      socket.emit('get:state');
-    });
-
-    socket.on('state', ({ currentRound: cr }) => {
-      if (cr) {
-        currentRound = cr;
-        renderBets(cr.bets || []);
-        timerEl.innerText = (cr.remaining ?? cr.duration) + 's';
-      }
-    });
-
-    socket.on('round:start', ({ id, duration, bets }) => {
-      currentRound = { id, duration, remaining: duration, bets };
-      renderBets(bets);
-      timerEl.innerText = duration + 's';
-      statusEl.innerText = 'round started';
-    });
-
-    socket.on('round:tick', ({ id, remaining }) => {
-      if (!currentRound || currentRound.id !== id) return;
-      currentRound.remaining = remaining;
-      timerEl.innerText = remaining + 's';
-    });
-
-    socket.on('bet:placed', (bet) => {
-      if (!currentRound) return;
-      currentRound.bets.push(bet);
-      renderBets(currentRound.bets);
-    });
-
-    socket.on('round:end', (result) => {
-      statusEl.innerText = `round ended: ${result.outcome.toUpperCase()}`;
-      // Simple visual flash indicating winner
-      if (result.outcome === 'up') {
-        document.querySelector('.up').style.boxShadow = '0 0 0 4px rgba(12,200,120,0.10)';
-        setTimeout(()=> document.querySelector('.up').style.boxShadow = '', 1200);
-      } else {
-        document.querySelector('.down').style.boxShadow = '0 0 0 4px rgba(255,80,80,0.08)';
-        setTimeout(()=> document.querySelector('.down').style.boxShadow = '', 1200);
-      }
-    });
-
-    // Place a demo user bet
-    function placeUserBet(side){
-      const name = 'You';
-      const amount = (Math.random()*10+1).toFixed(2);
-      socket.emit('place:bet', { name, side, amount });
-    }
-
-    document.getElementById('betUp').addEventListener('click', ()=> placeUserBet('up'));
-    document.getElementById('betDown').addEventListener('click', ()=> placeUserBet('down'));
-
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
