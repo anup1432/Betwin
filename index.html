@@ -1,101 +1,144 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TradeX - Prediction Game</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Market Battle</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <!-- 🔹 Navbar -->
-  <nav class="navbar">
-    <div class="logo">⚡ TradeX</div>
-    <div class="menu">
-      <button id="depositBtn">Deposit</button>
-      <button id="withdrawBtn">Withdraw</button>
-      <span class="balance">Balance: $<span id="balance">1</span></span>
+  <!-- Top Nav -->
+  <nav class="nav">
+    <div class="nav-left">
+      <div class="brand">
+        <span class="logo">MB</span>
+        <span class="brand-text">Market Battle</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="balance-pill">Balance: $<span id="balance">0.00</span></div>
+      <button class="btn primary" id="depositOpen">Deposit</button>
+      <button class="btn ghost" id="withdrawOpen">Withdraw</button>
     </div>
   </nav>
 
-  <!-- 🔹 Hero Section -->
-  <header class="hero">
-    <h1>Welcome to TradeX</h1>
-    <p>Predict the market movement and double your earnings!</p>
-  </header>
+  <!-- Main -->
+  <main class="container">
+    <!-- Chart card -->
+    <section class="card chart-card">
+      <div class="chart-head">
+        <div class="pair">BTC/USDT</div>
+        <div class="tags">
+          <span class="tag">Battle 20s</span>
+          <span class="tag">Result 5s</span>
+        </div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="priceChart"></canvas>
+        <div class="floating-price" id="floatingPrice">
+          <span id="priceArrow">▲</span><span id="priceVal">$0.000</span>
+        </div>
+      </div>
+      <div class="meta-row">
+        <div class="meta">Round <strong id="roundId">1</strong></div>
+        <div class="meta">Phase <strong id="phase">BET</strong></div>
+        <div class="meta">Timer <strong id="timer">20s</strong></div>
+        <div class="meta">Players <strong id="players">1</strong></div>
+      </div>
+    </section>
 
-  <!-- 🔹 Graph Section -->
-  <section class="graph-section">
-    <h2>Live Market Chart</h2>
-    <canvas id="priceChart"></canvas>
-    <div class="live-price">Price: $<span id="livePrice">100</span></div>
-  </section>
+    <!-- Battle panel -->
+    <section class="card battle-card">
+      <div class="battle-top">
+        <div class="lane up">
+          <div class="lane-title">UP</div>
+          <div class="lane-total">$<span id="upTotal">0.00</span></div>
+        </div>
+        <div class="lane down">
+          <div class="lane-title">DOWN</div>
+          <div class="lane-total">$<span id="downTotal">0.00</span></div>
+        </div>
+      </div>
 
-  <!-- 🔹 Game Panel -->
-  <section class="game-panel">
-    <h2>Place Your Prediction</h2>
-    <div class="timer">⏳ Time Left: <span id="timer">20</span>s</div>
-    <div class="bet-buttons">
-      <button id="betUp" class="up">⬆ UP</button>
-      <button id="betDown" class="down">⬇ DOWN</button>
-    </div>
-    <div id="result" class="result"></div>
-  </section>
+      <div class="bet-controls">
+        <input id="betAmount" inputmode="decimal" placeholder="Amount ($)" />
+        <button class="btn success" id="betUp">Bet UP</button>
+        <button class="btn danger" id="betDown">Bet DOWN</button>
+      </div>
 
-  <!-- 🔹 Bot Prediction -->
-  <section class="bot-panel">
-    <h2>🤖 Bot Prediction</h2>
-    <div class="bot">
-      <div class="bot-up">Bot says: <span id="botUp">⬆ UP</span></div>
-      <div class="bot-down">Bot says: <span id="botDown">⬇ DOWN</span></div>
-    </div>
-  </section>
+      <div class="ledger" id="activity">
+        <div class="muted">Recent activity will appear here…</div>
+      </div>
+    </section>
+  </main>
 
-  <!-- 🔹 Players History -->
-  <section class="history">
-    <h2>📊 Recent Bets</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>User</th>
-          <th>Bet</th>
-          <th>Result</th>
-          <th>Payout</th>
-        </tr>
-      </thead>
-      <tbody id="historyTable">
-        <!-- dynamic rows -->
-      </tbody>
-    </table>
-  </section>
+  <!-- Deposit Modal -->
+  <div class="modal-backdrop" id="depositModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Deposit</h3>
+        <button class="icon-btn" id="depositClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="note">Send funds to the wallet below, then paste your Transaction ID. Admin approval required. First-time welcome bonus: <strong>$1</strong>.</div>
 
-  <!-- 🔹 Footer -->
-  <footer class="footer">
-    <p>© 2025 TradeX. All Rights Reserved.</p>
-  </footer>
+        <div class="field">
+          <label>Deposit Wallet</label>
+          <div class="wallet-row">
+            <span id="depWallet">0xYourWalletHereABC123</span>
+            <button class="btn ghost" id="copyWallet">Copy</button>
+            <button class="btn ghost" id="changeWallet">Change</button>
+          </div>
+        </div>
 
-  <!-- 🔹 Deposit Modal -->
-  <div class="modal" id="depositModal">
-    <div class="modal-content">
-      <h2>Deposit</h2>
-      <p>Wallet Address: <b>0x1234abcd5678</b></p>
-      <input type="text" id="txnId" placeholder="Enter Transaction ID" />
-      <button id="submitDeposit">Submit</button>
-      <button class="closeModal">Close</button>
+        <div class="field">
+          <label>Transaction ID</label>
+          <input id="depTxn" placeholder="Paste your Txn ID" />
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="submitDeposit">Submit</button>
+          <button class="btn" id="clearLocalDeposits">Clear Local</button>
+        </div>
+
+        <div class="mini-list" id="depositList"></div>
+      </div>
     </div>
   </div>
 
-  <!-- 🔹 Withdraw Modal -->
-  <div class="modal" id="withdrawModal">
-    <div class="modal-content">
-      <h2>Withdraw</h2>
-      <input type="number" id="withdrawAmount" placeholder="Enter Amount (min $5)" />
-      <button id="submitWithdraw">Request Withdraw</button>
-      <button class="closeModal">Close</button>
+  <!-- Withdraw Modal -->
+  <div class="modal-backdrop" id="withdrawModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Withdraw</h3>
+        <button class="icon-btn" id="withdrawClose">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="note">Minimum withdrawal: <strong>$5</strong>. Admin approval required.</div>
+
+        <div class="field">
+          <label>Amount ($)</label>
+          <input id="wdAmount" type="number" min="5" step="0.01" placeholder="Min $5" />
+        </div>
+
+        <div class="field">
+          <label>Destination Wallet</label>
+          <input id="wdWallet" placeholder="Your wallet address" />
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="submitWithdraw">Request Withdraw</button>
+          <button class="btn" id="clearWithdraw">Clear</button>
+        </div>
+
+        <div class="mini-list" id="withdrawMsg"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <footer class="footer">© 2025 Market Battle</footer>
+
   <script src="script.js"></script>
 </body>
 </html>
