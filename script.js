@@ -1,4 +1,7 @@
-/* Market Battle — Frontend demo (bots both sides 8–20 each round) */
+/* Market Battle — Real Backend Frontend */
+
+/* --------------- Config / Backend URL --------------- */
+const BACKEND_URL = 'https://betwin-winn.onrender.com';
 
 /* --------------- Persistence keys --------------- */
 const K = {
@@ -32,11 +35,21 @@ const balEl = $('balance'), roundEl = $('roundNum'), phaseEl = $('phase'),
       upBotsList = $('upBotsList'), downBotsList = $('downBotsList'),
       activity = $('activity'), priceVal = $('priceVal'), priceArrow = $('priceArrow');
 
-/* --------------- Initial state --------------- */
-let balance = parseFloat(localStorage.getItem(K.BAL));
-if (!Number.isFinite(balance)) { balance = 1; localStorage.setItem(K.BAL, String(balance)); }
-balEl.textContent = fmt(balance);
+/* --------------- Fetch Real Balance --------------- */
+let balance = 0;
+async function fetchBalance(){
+    try{
+        const res = await fetch(`${BACKEND_URL}/balance`);
+        const data = await res.json();
+        if(data.balance !== undefined){
+            balance = data.balance;
+            balEl.textContent = fmt(balance);
+        }
+    } catch(e){ console.error('Balance fetch failed', e); }
+}
+fetchBalance();
 
+/* --------------- Initial state --------------- */
 let series = (() => {
   try { const s = JSON.parse(localStorage.getItem(K.SERIES) || '[]'); if (Array.isArray(s) && s.length) return s; } catch {}
   const seed = +(100 + Math.random()*3).toFixed(3);
@@ -149,39 +162,7 @@ function renderBots(upBots, downBots){
     <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
 }
 
-/* --------------- Round lifecycle --------------- */
-let lastPos = -1;
-let currentUpBots = [], currentDownBots = [];
-
-setInterval(()=>{
-  const s = computeState();
-  if (s.pos === 0 && lastPos !== 0){
-    epoch = now(); setEpoch(epoch);
-    roundNum = getRound() + 1; setRound(roundNum);
-    setStartPrice(series[series.length-1]);
-    const upCount = Math.floor(Math.random()*(BOT_MAX-BOT_MIN+1)) + BOT_MIN;
-    const downCount = Math.floor(Math.random()*(BOT_MAX-BOT_MIN+1)) + BOT_MIN;
-    currentUpBots = genBotsForSide(upCount, 'up');
-    currentDownBots = genBotsForSide(downCount, 'down');
-
-    let upTot = currentUpBots.reduce((s,b)=>s+b.amount, 0);
-    let downTot = currentDownBots.reduce((s,b)=>s+b.amount, 0);
-    totals.up = +(upTot + parseFloat(localStorage.getItem(K.UP_TOTAL) || 0)).toFixed(2);
-    totals.down = +(downTot + parseFloat(localStorage.getItem(K.DOWN_TOTAL) || 0)).toFixed(2);
-    setTotals(totals.up, totals.down);
-
-    renderBots(currentUpBots, currentDownBots);
-    log(`Round ${getRound()} started • Bots: UP ${upCount}, DOWN ${downCount}`);
-  }
-
-  if (s.pos === BET_WINDOW && lastPos !== BET_WINDOW){
-    settleRoundOnce();
-  }
-
-  lastPos = s.pos;
-}, 300);
-
-/* --------------- placeBet (user) --------------- */
+/* --------------- Place User Bet (same demo logic) --------------- */
 function placeBetUser(side){
   const amt = parseFloat($('betAmount').value || '0');
   if(!(amt > 0)) return toast('Enter valid amount');
@@ -189,7 +170,7 @@ function placeBetUser(side){
   if(!s.inBet) return toast('Betting closed for this round');
   if(balance < amt) return toast('Insufficient balance');
 
-  balance = +(balance - amt).toFixed(2); setBalance(balance);
+  balance = +(balance - amt).toFixed(2); balEl.textContent = fmt(balance);
   if(side==='up') totals.up = +(totals.up + amt).toFixed(2); else totals.down = +(totals.down + amt).toFixed(2);
   setTotals(totals.up, totals.down);
 
@@ -200,127 +181,57 @@ function placeBetUser(side){
 }
 $('betUp').addEventListener('click', ()=> placeBetUser('up'));
 $('betDown').addEventListener('click', ()=> placeBetUser('down'));
+function setTotals(u,d){ upTotalEl.textContent = fmt(u); downTotalEl.textContent = fmt(d); }
 
-function setBalance(v){ localStorage.setItem(K.BAL, String(v)); balEl.textContent = fmt(v); balance = v; }
-function setTotals(u,d){ localStorage.setItem(K.UP_TOTAL, String(u)); localStorage.setItem(K.DOWN_TOTAL, String(d)); upTotalEl.textContent = fmt(u); downTotalEl.textContent = fmt(d); }
+/* --------------- Deposit / Withdraw — Real Backend --------------- */
+$('submitDeposit').addEventListener('click', async ()=>{
+  const txn = $('depositTxn').value.trim();
+  const wallet = $('depositWalletSelect').value;
+  if(!txn){ toast('Enter transaction ID'); return; }
+  try{
+      const res = await fetch(`${BACKEND_URL}/deposit`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({txn,wallet})
+      });
+      const data = await res.json();
+      if(data.success){
+          toast('Deposit submitted — pending admin approval');
+          $('depositTxn').value = '';
+          closeModal('depositModal');
+          fetchBalance();
+      } else toast(data.message || 'Deposit failed');
+  } catch(e){ console.error(e); toast('Deposit error'); }
+});
 
-/* --------------- settleRoundOnce --------------- */
-let settledRounds = new Set();
-function settleRoundOnce(){
-  const r = getRound();
-  if (settledRounds.has(r)) return;
-  settledRounds.add(r);
+$('submitWithdraw').addEventListener('click', async ()=>{
+  const amt = parseFloat($('wdAmount').value||'0'); const wal = $('wdWallet').value.trim();
+  if(!(amt>=5)){ $('withdrawMsg').textContent='Minimum $5 required'; return; }
+  if(amt>balance){ $('withdrawMsg').textContent='Insufficient balance'; return; }
+  if(!wal){ $('withdrawMsg').textContent='Enter wallet address'; return; }
 
-  const startPrice = parseFloat(localStorage.getItem(K.START_PRICE) || series[0]);
-  const endPrice = series[series.length-1];
-  const result = endPrice >= startPrice ? 'up' : 'down';
+  try{
+      const res = await fetch(`${BACKEND_URL}/withdraw`,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({amount:amt,wallet:wal})
+      });
+      const data = await res.json();
+      if(data.success){
+          $('withdrawMsg').textContent='Withdraw request submitted — pending admin';
+          balance -= amt; balEl.textContent=fmt(balance);
+          $('wdAmount').value=''; $('wdWallet').value='';
+          closeModal('withdrawModal');
+      } else $('withdrawMsg').textContent=data.message || 'Withdraw failed';
+  } catch(e){ console.error(e); $('withdrawMsg').textContent='Withdraw error'; }
+});
 
-  const roundBets = myBets.filter(b=>b.round === r);
-  let credit = 0;
-  roundBets.forEach(b=>{
-    if(b.side === result){
-      credit += b.amount * 2;
-    }
-  });
-  if(credit > 0){
-    setBalance(+(balance + credit).toFixed(2));
-    log(`Result ${result.toUpperCase()} • You won +$${fmt(credit)}`);
-  } else {
-    log(`Result ${result.toUpperCase()} • You had no winning bets`);
-  }
-
-  const upWinner = result === 'up';
-  let upWin = currentUpBots.filter(b=> b.side==='up').reduce((s,b)=> s + (upWinner ? b.amount*2 : 0), 0);
-  let downWin = currentDownBots.filter(b=> b.side==='down').reduce((s,b)=> s + (!upWinner ? b.amount*2 : 0), 0);
-  log(`Bots • UP total $${fmt(totals.up)} • DOWN total $${fmt(totals.down)} • Result ${result.toUpperCase()}`);
-
-  myBets = myBets.filter(b => b.round !== r);
-  localStorage.setItem(K.MY_BETS, JSON.stringify(myBets));
-
-  setTimeout(()=>{
-    currentUpBots = []; currentDownBots = [];
-    renderBots([], []);
-    setTotals(0,0);
-    settledRounds.delete(r);
-  }, 1800);
-}
-
-/* --------------- Activity / UI --------------- */
-function log(text){
-  const row = document.createElement('div');
-  row.className = 'row';
-  const t = new Date().toLocaleTimeString();
-  row.innerHTML = `<span>${t}</span><span>${text}</span>`;
-  activity.querySelector('.hint')?.remove();
-  activity.prepend(row);
-  while(activity.children.length > 40) activity.lastChild.remove();
-}
-function toast(msg){ log(msg); }
-
-setInterval(()=>{ if(playersEl) playersEl.textContent = Math.floor(30 + Math.random()*40); }, 1500);
-
-/* --------------- Deposit / Withdraw UI --------------- */
+/* --------------- Init Modals / Wallets --------------- */
 $('openDeposit').addEventListener('click', ()=> openModal('depositModal'));
 $('openWithdraw').addEventListener('click', ()=> openModal('withdrawModal'));
 document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', e => closeModal(e.currentTarget.getAttribute('data-close'))));
 function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
 function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
 
-/* --------------- Multi-wallet Deposit setup --------------- */
-const DEPOSIT_WALLETS = [
-  { chain:'TRC20', addr:'TWZHqkbbYTnehQ2TxnH4NgNt4crGLNy8Ns' },
-  { chain:'Polygon', addr:'0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44' },
-  { chain:'BEP20', addr:'0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44' },
-  { chain:'TON', addr:'EQAj7vKLbaWjaNbAuAKP1e1HwmdYZ2vJ2xtWU8qq3JafkfxF' }
-];
-
-function initDepositWallets(){
-  const depositWalletEl = $('depositWallet');
-  const sel = document.createElement('select');
-  sel.id = 'depositWalletSelect';
-  sel.style.width = '100%';
-  sel.style.marginBottom = '6px';
-  DEPOSIT_WALLETS.forEach(w=>{
-    const opt = document.createElement('option');
-    opt.value = w.addr;
-    opt.textContent = `${w.chain}: ${w.addr}`;
-    sel.appendChild(opt);
-  });
-  depositWalletEl.replaceWith(sel);
-
-  $('copyDepositWallet').addEventListener('click', async()=>{
-    const t = sel.value.trim();
-    try{ await navigator.clipboard.writeText(t); toast('Deposit wallet copied'); }catch{ toast('Copy failed'); }
-  });
-}
-initDepositWallets();
-
-/* --------------- Deposit submit --------------- */
-$('submitDeposit').addEventListener('click', ()=>{
-  const txn = $('depositTxn').value.trim();
-  if(!txn){ toast('Enter transaction id'); return; }
-  const arr = JSON.parse(localStorage.getItem(K.DEPOSITS) || '[]');
-  arr.push({ txn, ts: Date.now(), status: 'pending'});
-  localStorage.setItem(K.DEPOSITS, JSON.stringify(arr));
-  $('depositTxn').value = '';
-  toast('Deposit submitted — pending admin approval');
-  closeModal('depositModal');
-});
-
-/* --------------- Withdraw submit --------------- */
-$('submitWithdraw').addEventListener('click', ()=>{
-  const amt = parseFloat($('wdAmount').value||'0'); const wal = $('wdWallet').value.trim();
-  if(!(amt>=5)){ $('withdrawMsg').textContent = 'Minimum $5 required'; return; }
-  if(amt > balance){ $('withdrawMsg').textContent = 'Insufficient balance'; return; }
-  if(!wal){ $('withdrawMsg').textContent = 'Enter wallet address'; return; }
-  $('withdrawMsg').textContent = 'Withdraw request submitted — pending admin';
-  balance = +(balance - amt).toFixed(2);
-  setBalance(balance);
-  $('wdAmount').value=''; $('wdWallet').value='';
-  closeModal('withdrawModal');
-});
-
-/* --------------- Init UI --------------- */
-renderBots([], []);
-setTotals(totals.up, totals.down);
-log('Welcome — demo started. Welcome bonus $1 applied (first time).');
+/* --------------- Deposit Wallet Dropdown --------------- */
+const
