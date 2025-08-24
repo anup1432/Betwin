@@ -1,88 +1,113 @@
 body {
   margin: 0;
   font-family: Arial, sans-serif;
-  background: #111;
+  background: #0d1117;
   color: #fff;
 }
 
-header {
+/* Navbar */
+.navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background: #1c1c1c;
+  background: #161b22;
+  padding: 10px 20px;
 }
-
-.balance-box {
-  font-size: 16px;
+.navbar .logo {
+  font-weight: bold;
+  font-size: 18px;
 }
-
-.balance-box button {
+.navbar .menu button {
+  margin: 0 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #238636;
+  color: white;
+  cursor: pointer;
+}
+.navbar .menu .balance {
   margin-left: 10px;
-  background: #28a745;
-  border: none;
-  color: #fff;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 5px;
+  font-weight: bold;
 }
 
-.menu {
+/* Graph */
+.graph-section {
   position: relative;
-  cursor: pointer;
-  font-size: 20px;
-}
-
-.dropdown {
-  display: none;
-  position: absolute;
-  right: 0;
-  background: #222;
-  border: 1px solid #444;
-  border-radius: 5px;
-  overflow: hidden;
-}
-
-.menu:hover .dropdown {
-  display: block;
-}
-
-.dropdown button {
-  display: block;
-  background: none;
-  border: none;
-  color: #fff;
-  padding: 10px 15px;
-  text-align: left;
-  width: 100%;
-  cursor: pointer;
-}
-
-.dropdown button:hover {
-  background: #333;
-}
-
-#chart {
-  height: 400px;
-}
-
-.log-box {
-  margin: 15px;
-  background: #1c1c1c;
+  height: 300px;
   padding: 10px;
+}
+#priceChart {
+  width: 100%;
+  height: 100%;
+}
+.live-price {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: #161b22;
+  padding: 5px 10px;
+  border-radius: 5px;
+}
+
+/* Game Panel */
+.game-panel {
+  text-align: center;
+  margin: 20px;
+}
+.timer {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+.bet-buttons button {
+  margin: 10px;
+  padding: 15px 25px;
+  font-size: 18px;
+  border: none;
   border-radius: 8px;
+  cursor: pointer;
+}
+.bet-buttons .up {
+  background: #16a34a;
+  color: white;
+}
+.bet-buttons .down {
+  background: #dc2626;
+  color: white;
+}
+.result {
+  margin-top: 15px;
+  font-size: 22px;
+  font-weight: bold;
 }
 
-.log-box h3 {
-  margin: 0 0 10px;
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  justify-content: center;
+  align-items: center;
 }
-
-#logList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  font-size: 14px;
+.modal-content {
+  background: #161b22;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
 }
-
-#logList li.win { color: #4caf50; }
-#logList li.loss { color: #f44336; }
+.modal-content input {
+  width: 80%;
+  padding: 8px;
+  margin: 10px 0;
+  border-radius: 6px;
+  border: none;
+}
+.modal-content button {
+  margin: 5px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
