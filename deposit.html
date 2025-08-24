@@ -5,147 +5,82 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Deposit</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .deposit-container {
-      max-width: 450px;
-      margin: 50px auto;
-      padding: 25px;
-      background: #0f1620;
-      border-radius: 14px;
-      box-shadow: 0 8px 28px rgba(0,0,0,0.5);
-      text-align: center;
-      color: #e7eef4;
-    }
-    .deposit-container h2 {
-      margin-bottom: 20px;
-      color: #ffb86b;
-    }
-    .deposit-container select,
-    .deposit-container input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: #141c27;
-      color: #fff;
-    }
-    .deposit-container button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      margin-top: 15px;
-      background: linear-gradient(180deg, #ffb86b, #ff9e42);
-      color: #000;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .wallet-address {
-      margin: 15px 0;
-      font-size: 14px;
-      background: #141c27;
-      padding: 10px;
-      border-radius: 10px;
-      word-break: break-all;
-    }
-    .activity-log {
-      margin-top: 25px;
-      text-align: left;
-      max-height: 200px;
-      overflow-y: auto;
-      background: #141c27;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 14px;
-    }
-    .qr-box {
-      margin: 10px 0;
-    }
-  </style>
 </head>
 <body>
   <div class="deposit-container">
-    <h2>Deposit</h2>
+    <h2>💰 Deposit</h2>
 
-    <label>Select Wallet</label>
-    <select id="walletSelect">
-      <option value="TRC20">TRC20</option>
-      <option value="Polygon">Polygon</option>
-      <option value="BEP20">BEP20</option>
-      <option value="TON">TON</option>
-    </select>
+    <label for="walletSelect">Select Wallet:</label>
+    <select id="walletSelect"></select>
 
-    <div class="wallet-address" id="walletAddress">Select wallet to view address</div>
-    <div class="qr-box">
-      <img id="qrCode" src="" alt="QR Code" style="max-width:150px; display:none;">
-    </div>
+    <p><strong>Wallet Address:</strong></p>
+    <div id="walletAddress" class="wallet-box"></div>
 
-    <input type="text" id="userName" placeholder="Your Name / ID">
-    <input type="number" id="amount" placeholder="Enter Amount">
-    <input type="text" id="txnId" placeholder="Enter Transaction ID">
+    <canvas id="qrCode"></canvas>
 
-    <button onclick="saveDeposit()">Submit Deposit</button>
+    <form id="depositForm">
+      <label>Enter Amount:</label>
+      <input type="number" id="amount" placeholder="Enter amount" required>
 
-    <div class="activity-log" id="activityLog">
-      <strong>Activity Log:</strong>
-      <div id="logEntries"></div>
-    </div>
+      <label>Your Name:</label>
+      <input type="text" id="username" placeholder="Enter name" required>
+
+      <button type="submit">Submit Deposit</button>
+    </form>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
   <script>
-    const DEPOSIT_WALLETS = {
-      "TRC20": "TWZHqkbbYTnehQ2TxnH4NgNt4crGLNy8Ns",
-      "Polygon": "0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44",
-      "BEP20": "0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44",
-      "TON": "EQAj7vKLbaWjaNbAuAKP1e1HwmdYZ2vJ2xtWU8qq3JafkfxF"
-    };
+    const DEPOSIT_WALLETS = [
+      { chain:'TRC20', addr:'TWZHqkbbYTnehQ2TxnH4NgNt4crGLNy8Ns' },
+      { chain:'Polygon', addr:'0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44' },
+      { chain:'BEP20', addr:'0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44' },
+      { chain:'TON', addr:'EQAj7vKLbaWjaNbAuAKP1e1HwmdYZ2vJ2xtWU8qq3JafkfxF' }
+    ];
 
     const walletSelect = document.getElementById("walletSelect");
     const walletAddress = document.getElementById("walletAddress");
-    const qrCode = document.getElementById("qrCode");
-    const logEntries = document.getElementById("logEntries");
+    const qrCodeCanvas = document.getElementById("qrCode");
 
-    walletSelect.addEventListener("change", () => {
-      const chain = walletSelect.value;
-      walletAddress.innerText = DEPOSIT_WALLETS[chain];
-      qrCode.src = `https://api.qrserver.com/v1/create-qr-code/?data=${DEPOSIT_WALLETS[chain]}&size=150x150`;
-      qrCode.style.display = "block";
+    // populate select
+    DEPOSIT_WALLETS.forEach(w => {
+      let opt = document.createElement("option");
+      opt.value = w.addr;
+      opt.textContent = w.chain;
+      walletSelect.appendChild(opt);
     });
 
-    function saveDeposit() {
-      const name = document.getElementById("userName").value;
-      const amount = document.getElementById("amount").value;
-      const txnId = document.getElementById("txnId").value;
-      const chain = walletSelect.value;
-      const address = DEPOSIT_WALLETS[chain];
-      const date = new Date().toLocaleString();
-
-      if (!name || !amount || !txnId) {
-        alert("Please fill all fields!");
-        return;
-      }
-
-      const entry = { name, amount, txnId, chain, address, date };
-
-      let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
-      deposits.unshift(entry);
-      localStorage.setItem("deposits", JSON.stringify(deposits));
-
-      renderLog();
-      document.getElementById("userName").value = "";
-      document.getElementById("amount").value = "";
-      document.getElementById("txnId").value = "";
+    function updateWallet() {
+      let addr = walletSelect.value;
+      walletAddress.textContent = addr;
+      QRCode.toCanvas(qrCodeCanvas, addr, { width: 200 });
     }
 
-    function renderLog() {
-      let deposits = JSON.parse(localStorage.getItem("deposits")) || [];
-      logEntries.innerHTML = deposits.map(d =>
-        `<div>👤 ${d.name} | 💰 ${d.amount} | ${d.chain} | Txn: ${d.txnId} | 📅 ${d.date}</div>`
-      ).join("");
-    }
+    walletSelect.addEventListener("change", updateWallet);
+    updateWallet();
 
-    renderLog();
+    // backend URL
+    const API_BASE = "https://betwin-backend.onrender.com";
+
+    document.getElementById("depositForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const data = {
+        wallet: walletSelect.options[walletSelect.selectedIndex].text,
+        address: walletSelect.value,
+        amount: document.getElementById("amount").value,
+        username: document.getElementById("username").value
+      };
+
+      let res = await fetch(`${API_BASE}/api/deposit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      let result = await res.json();
+      alert(result.msg || "Deposit submitted!");
+    });
   </script>
 </body>
 </html>
