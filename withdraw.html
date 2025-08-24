@@ -1,143 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Withdrawal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Withdraw</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    .withdraw-container {
-      max-width: 500px;
-      margin: 50px auto;
-      background: #1a1a1a;
-      color: #fff;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    .withdraw-container h2 {
-      margin-bottom: 20px;
-    }
-    .withdraw-container input, .withdraw-container select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-    }
-    .withdraw-container button {
-      width: 100%;
-      padding: 12px;
-      background: #00b894;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .withdraw-container button:hover {
-      background: #019875;
-    }
-    .history {
-      margin-top: 30px;
-      text-align: left;
-    }
-    .history h3 {
-      margin-bottom: 10px;
-    }
-    .history table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .history th, .history td {
-      padding: 8px;
-      border: 1px solid #444;
-      font-size: 14px;
-      text-align: center;
-    }
-  </style>
 </head>
 <body>
-
   <div class="withdraw-container">
-    <h2>Withdrawal Request</h2>
-    <input type="text" id="wName" placeholder="Enter your Name/ID">
-    <select id="wChain">
-      <option value="TRC20">TRC20</option>
-      <option value="Polygon">Polygon</option>
-      <option value="BEP20">BEP20</option>
-      <option value="TON">TON</option>
-    </select>
-    <input type="text" id="wAddress" placeholder="Enter Your Wallet Address">
-    <input type="number" id="wAmount" placeholder="Enter Amount">
-    <button onclick="submitWithdraw()">Submit Withdrawal</button>
+    <h2>🏧 Withdraw</h2>
 
-    <div class="history">
-      <h3>Withdrawal History</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Chain</th>
-            <th>Address</th>
-            <th>Amount</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="withdrawHistory"></tbody>
-      </table>
-    </div>
+    <form id="withdrawForm">
+      <label>Wallet Address:</label>
+      <input type="text" id="wallet" placeholder="Enter wallet address" required>
+
+      <label>Amount:</label>
+      <input type="number" id="amount" placeholder="Enter amount" required>
+
+      <label>Your Name:</label>
+      <input type="text" id="username" placeholder="Enter name" required>
+
+      <button type="submit">Request Withdraw</button>
+    </form>
   </div>
 
   <script>
-    function submitWithdraw(){
-      const name = document.getElementById("wName").value;
-      const chain = document.getElementById("wChain").value;
-      const address = document.getElementById("wAddress").value;
-      const amount = document.getElementById("wAmount").value;
+    const API_BASE = "https://betwin-backend.onrender.com";
 
-      if(!name || !address || !amount){
-        alert("Please fill all fields!");
-        return;
-      }
+    document.getElementById("withdrawForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      const record = {
-        name,
-        chain,
-        address,
-        amount,
-        date: new Date().toLocaleString()
+      const data = {
+        wallet: document.getElementById("wallet").value,
+        amount: document.getElementById("amount").value,
+        username: document.getElementById("username").value
       };
 
-      let history = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
-      history.push(record);
-      localStorage.setItem("withdrawHistory", JSON.stringify(history));
-
-      loadHistory();
-      alert("Withdrawal request submitted!");
-    }
-
-    function loadHistory(){
-      let history = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
-      const tbody = document.getElementById("withdrawHistory");
-      tbody.innerHTML = "";
-      history.forEach(h => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${h.name}</td>
-            <td>${h.chain}</td>
-            <td>${h.address}</td>
-            <td>${h.amount}</td>
-            <td>${h.date}</td>
-          </tr>
-        `;
+      let res = await fetch(`${API_BASE}/api/withdraw`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
       });
-    }
 
-    window.onload = loadHistory;
+      let result = await res.json();
+      alert(result.msg || "Withdraw request sent!");
+    });
   </script>
-
 </body>
 </html>
