@@ -332,6 +332,3 @@ renderBots([], []);
 setTotals(totals.up, totals.down);
 log('Welcome — demo started. Welcome bonus $1 applied (first time).');
 
-Ab ruko baki ke do file bhi de raha hu
-
-  
