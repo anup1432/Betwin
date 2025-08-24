@@ -1,4 +1,4 @@
-/* Market Battle — Frontend demo (bots both sides 8–20 each round) */
+/* Market Battle — Frontend (bots both sides 8–20 each round) */
 
 /* --------------- Persistence keys --------------- */
 const K = {
@@ -320,5 +320,4 @@ renderBots([], []);
 setTotals(totals.up, totals.down);
 log('Welcome — demo started. Welcome bonus $1 applied (first time).');
 
-Ye pura chaya muja same features
-
+  
