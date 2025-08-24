@@ -1,150 +1,109 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Betwin Dashboard</title>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-<style>
-  * {margin:0; padding:0; box-sizing:border-box; font-family: 'Roboto', sans-serif;}
-  body {background:#0d1117; color:#fff;}
-  .container {max-width:1200px; margin:auto; padding:20px;}
+<!doctype html>
 
-  /* Header */
-  header {display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;}
-  header h1 {color:#00ff99; font-size:1.8rem;}
-  .wallet {background:#1f1f1f; padding:10px 20px; border-radius:12px; cursor:pointer; transition:0.3s;}
-  .wallet:hover {background:#00ff99; color:#000;}
+<html lang="en">    
+<head>    
+  <meta charset="utf-8" />    
+  <meta name="viewport" content="width=device-width,initial-scale=1" />    
+  <title>Market Battle • Demo</title>    
+  <link rel="stylesheet" href="style.css" />    
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>    
+</head>    
+<body>    
+  <header class="appbar">    
+    <div class="left">    
+      <div class="logo">MB</div>    
+      <div class="brand">    
+        <div class="title">Market Battle</div>    
+        <div class="sub">Demo frontend</div>    
+      </div>    
+    </div>    <div class="right">    
+  <div class="wallet">    
+    <div class="wallet-addr" id="walletAddr">0xYourWalletHereABC123</div>    
+    <button class="mini" id="copyWalletBtn">Copy</button>    
+    <button class="mini ghost" id="editWalletBtn">Edit</button>    
+  </div>    
 
-  /* Graph Section */
-  .graph-section {background:#161b22; padding:20px; border-radius:20px; margin-bottom:20px; box-shadow:0 0 15px rgba(0,255,0,0.2);}
-  canvas {width:100%; height:300px;}
-
-  /* Bot Section */
-  .bot-section {display:flex; justify-content:space-between; gap:20px; margin-bottom:20px;}
-  .bot-box {flex:1; background:#161b22; border-radius:15px; padding:15px; box-shadow:0 0 10px rgba(0,255,255,0.2);}
-  .bot-box h2 {text-align:center; margin-bottom:10px; color:#00ffff; font-size:1.2rem;}
-  .bot-list {list-style:none;}
-  .bot-list li {padding:6px; border-bottom:1px solid #333; font-size:0.95rem;}
-
-  /* History Section */
-  .history-section {background:#161b22; padding:20px; border-radius:15px; box-shadow:0 0 15px rgba(255,204,0,0.2);}
-  .history-section h2 {margin-bottom:10px; color:#ffcc00; font-size:1.3rem;}
-  .history-list {list-style:none; max-height:200px; overflow-y:auto;}
-  .history-list li {padding:8px; border-bottom:1px solid #333; font-size:0.95rem;}
-
-  /* Responsive */
-  @media(max-width:768px){
-    .bot-section {flex-direction:column;}
-    .bot-box {margin-bottom:10px;}
-  }
-</style>
-</head>
-<body>
-
-<div class="container">
-  <!-- Header -->
-  <header>
-    <h1>Betwin Dashboard</h1>
-    <div class="wallet" onclick="showWallet()">Wallet</div>
-  </header>
-
-  <!-- Graph Section -->
-  <div class="graph-section">
-    <canvas id="tradingGraph"></canvas>
-  </div>
-
-  <!-- Bot Section -->
-  <div class="bot-section">
-    <div class="bot-box">
-      <h2>UP Bots</h2>
-      <ul class="bot-list" id="upBots"></ul>
-    </div>
-    <div class="bot-box">
-      <h2>DOWN Bots</h2>
-      <ul class="bot-list" id="downBots"></ul>
-    </div>
-  </div>
-
-  <!-- History Section -->
-  <div class="history-section">
-    <h2>History</h2>
-    <ul class="history-list" id="historyList"></ul>
-  </div>
+  <div class="balance-pill">Balance: $<span id="balance">0.00</span></div>    
+  <button id="openDeposit" class="btn primary">Deposit</button>    
+  <button id="openWithdraw" class="btn ghost">Withdraw</button>    
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-  // Wallet popup
-  function showWallet(){
-    const address = "0xYourWalletAddressHere";
-    const tx = prompt("Deposit Crypto:\nSend to: " + address + "\nEnter your Transaction ID:");
-    if(tx) alert("Transaction submitted! Admin will approve shortly.");
-  }
+  </header>      <main class="container">    
+    <section class="card chart-card">    
+      <div class="chart-top">    
+        <div class="pair">BTC/USDT • Demo</div>    
+        <div class="tags">    
+          <span class="tag">20s Bet</span>    
+          <span class="tag">5s Result</span>    
+          <span class="tag live">Live</span>    
+        </div>    
+      </div>    <div class="chart-wrap">    
+    <canvas id="priceChart"></canvas>    
+    <div class="floating" id="floatingPrice"><span id="priceArrow">▲</span> <span id="priceVal">$0.000</span></div>    
+    <div class="round-info">    
+      <div class="pill">Round <b id="roundNum">1</b></div>    
+      <div class="pill">Phase <b id="phase">—</b></div>    
+      <div class="pill">Timer <b id="timer">—s</b></div>    
+      <div class="pill">Players <b id="players">—</b></div>    
+    </div>    
+  </div>    
 
-  // Sample data
-  const upBots = ["Bot1","Bot2","Bot3","Bot4","Bot9"];
-  const downBots = ["Bot5","Bot6","Bot7","Bot8","Bot10"];
-  const history = ["Up Bot1 Won","Down Bot6 Lost","Up Bot2 Won","Down Bot7 Lost","Up Bot9 Won"];
+  <div class="lanes">    
+    <div class="lane up">    
+      <div class="lane-head">UP</div>    
+      <div class="lane-total">$<span id="upTotal">0.00</span></div>    
+      <div class="bots-list" id="upBotsList"></div>    
+    </div>    
 
-  const upList = document.getElementById('upBots');
-  const downList = document.getElementById('downBots');
-  const historyList = document.getElementById('historyList');
+    <div class="lane down">    
+      <div class="lane-head">DOWN</div>    
+      <div class="lane-total">$<span id="downTotal">0.00</span></div>    
+      <div class="bots-list" id="downBotsList"></div>    
+    </div>    
+  </div>    
 
-  upBots.forEach(bot => { 
-    const li = document.createElement('li'); 
-    li.textContent = bot; 
-    upList.appendChild(li); 
-  });
-  downBots.forEach(bot => { 
-    const li = document.createElement('li'); 
-    li.textContent = bot; 
-    downList.appendChild(li); 
-  });
-  history.forEach(item => { 
-    const li = document.createElement('li'); 
-    li.textContent = item; 
-    historyList.appendChild(li); 
-  });
+  <div class="controls">    
+    <input id="betAmount" type="number" min="0.1" step="0.1" placeholder="Amount ($)" />    
+    <button id="betUp" class="btn success">Bet UP</button>    
+    <button id="betDown" class="btn danger">Bet DOWN</button>    
+  </div>    
 
-  // Chart.js with gradient
-  const ctx = document.getElementById('tradingGraph').getContext('2d');
-  const gradient = ctx.createLinearGradient(0,0,0,300);
-  gradient.addColorStop(0,'rgba(0,255,0,0.4)');
-  gradient.addColorStop(1,'rgba(255,0,0,0.4)');
+  <div class="activity" id="activity">    
+    <div class="hint">Recent activity will appear here…</div>    
+  </div>    
+</section>
 
-  const tradingGraph = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Array.from({length:20}, (_, i) => i+1),
-      datasets: [{
-        label: 'Price',
-        data: Array.from({length:20}, () => Math.floor(Math.random()*100)+50),
-        borderColor: 'lime',
-        backgroundColor: gradient,
-        tension:0.4,
-        fill:true,
-        pointRadius:0
-      }]
-    },
-    options: {
-      responsive:true,
-      scales:{
-        y:{ beginAtZero:false, ticks:{color:'#fff'} },
-        x:{ ticks:{color:'#fff'} }
-      },
-      plugins:{ legend:{display:false} }
-    }
-  });
-
-  // Update graph dynamically
-  setInterval(()=>{
-    const newData = Math.floor(Math.random()*100)+50;
-    tradingGraph.data.datasets[0].data.shift();
-    tradingGraph.data.datasets[0].data.push(newData);
-    tradingGraph.update();
-  },2000);
-</script>
-
-</body>
+  </main>      <!-- Deposit Modal -->      <div id="depositModal" class="modal hidden">    
+    <div class="modal-card">    
+      <div class="modal-head"><h3>Deposit</h3><button class="icon-btn" data-close="depositModal">✕</button></div>    
+      <div class="modal-body">    
+        <p class="muted">Send funds to wallet then paste Transaction ID. Admin approval required. Welcome bonus $1 once.</p>    
+        <div class="wallet-row">    
+          <div class="label">Wallet</div>    
+          <div class="value" id="depositWallet">0xYourWalletHereABC123</div>    
+          <button class="mini ghost" id="copyDepositWallet">Copy</button>    
+        </div>    
+        <input id="depositTxn" placeholder="Transaction ID" />    
+        <div class="row gap">    
+          <button id="submitDeposit" class="btn primary">Submit</button>    
+          <button class="btn" data-close="depositModal">Cancel</button>    
+        </div>    
+        <div id="depositMsg" class="muted"></div>    
+      </div>    
+    </div>    
+  </div>      <!-- Withdraw Modal -->      <div id="withdrawModal" class="modal hidden">    
+    <div class="modal-card">    
+      <div class="modal-head"><h3>Withdraw</h3><button class="icon-btn" data-close="withdrawModal">✕</button></div>    
+      <div class="modal-body">    
+        <p class="muted">Minimum withdrawal: <b>$5</b>. Admin approval required.</p>    
+        <input id="wdAmount" type="number" min="5" step="0.01" placeholder="Amount ($ ≥ 5)" />    
+        <input id="wdWallet" placeholder="Destination wallet address" />    
+        <div class="row gap">    
+          <button id="submitWithdraw" class="btn primary">Submit</button>    
+          <button class="btn" data-close="withdrawModal">Cancel</button>    
+        </div>    
+        <div id="withdrawMsg" class="muted"></div>    
+      </div>    
+    </div>    
+  </div>      <footer class="footer">© 2025 Market Battle — Demo</footer>      <script src="script.js"></script>    </body>    
 </html>
