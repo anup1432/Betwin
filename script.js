@@ -2,9 +2,9 @@
 // GLOBAL STATE
 // ==========================
 let balance = parseFloat(localStorage.getItem("balance")) || 1; // Welcome bonus $1
-let lastPrice = parseFloat(localStorage.getItem("lastPrice")) || 100; // starting price
-let phase = localStorage.getItem("phase") || "betting"; // "betting" or "result"
-let timer = parseInt(localStorage.getItem("timer")) || 20; // 20s betting / 5s result
+let lastPrice = parseFloat(localStorage.getItem("lastPrice")) || 100;
+let phase = localStorage.getItem("phase") || "betting";
+let timer = parseInt(localStorage.getItem("timer")) || 20;
 let bets = JSON.parse(localStorage.getItem("bets")) || { up: 0, down: 0 };
 
 document.getElementById("balance").innerText = balance.toFixed(2);
@@ -41,10 +41,10 @@ const chart = new Chart(ctx, {
 });
 
 // ==========================
-// PRICE UPDATE (Smooth Move)
+// PRICE UPDATE
 // ==========================
 function updatePrice() {
-  let change = (Math.random() - 0.5) * 2; // -1 to +1 random
+  let change = (Math.random() - 0.5) * 2;
   lastPrice += change;
   priceData.push(lastPrice);
   labels.push(labels.length);
@@ -54,23 +54,24 @@ function updatePrice() {
     labels.shift();
   }
 
-  // Color update
   chart.data.datasets[0].borderColor = change >= 0 ? "lime" : "red";
   chart.data.datasets[0].backgroundColor =
     change >= 0 ? "rgba(0,255,0,0.1)" : "rgba(255,0,0,0.1)";
-
   chart.update();
 
-  // Save state
   localStorage.setItem("lastPrice", lastPrice);
   localStorage.setItem("priceData", JSON.stringify(priceData));
   localStorage.setItem("labels", JSON.stringify(labels));
 }
 
 // ==========================
-// BETTING SYSTEM
+// BET SYSTEM
 // ==========================
 function placeBet(type) {
+  if (phase !== "betting") {
+    alert("Betting closed! Wait for next round.");
+    return;
+  }
   if (balance < 1) {
     alert("Not enough balance!");
     return;
@@ -83,37 +84,35 @@ function placeBet(type) {
 }
 
 // ==========================
-// TIMER + GAME LOOP
+// TIMER & GAME LOOP
 // ==========================
 setInterval(() => {
   timer--;
   if (timer < 0) {
     if (phase === "betting") {
       phase = "result";
-      timer = 5; // result phase
+      timer = 5;
       decideResult();
     } else {
       phase = "betting";
-      timer = 20; // restart betting
+      timer = 20;
       bets = { up: 0, down: 0 };
       localStorage.setItem("bets", JSON.stringify(bets));
     }
   }
-
   document.getElementById("timer").innerText = timer;
-
   localStorage.setItem("timer", timer);
   localStorage.setItem("phase", phase);
 }, 1000);
 
 // ==========================
-// DECIDE RESULT
+// RESULT LOGIC
 // ==========================
 function decideResult() {
   let result = Math.random() > 0.5 ? "up" : "down";
 
   if (bets[result] > 0) {
-    balance += bets[result] * 2; // double return
+    balance += bets[result] * 2;
   }
 
   localStorage.setItem("balance", balance);
@@ -121,20 +120,14 @@ function decideResult() {
 }
 
 // ==========================
-// BUTTON EVENTS
+// EVENTS
 // ==========================
 document.getElementById("bet-up").addEventListener("click", () => placeBet("up"));
-document.getElementById("bet-down").addEventListener("click", () =>
-  placeBet("down")
-);
-
-// ==========================
-// GRAPH INTERVAL
-// ==========================
+document.getElementById("bet-down").addEventListener("click", () => placeBet("down"));
 setInterval(updatePrice, 1000);
 
 // ==========================
-// DEPOSIT & WITHDRAW (Dummy)
+// DEPOSIT / WITHDRAW (dummy)
 // ==========================
 function deposit() {
   let txn = prompt("Enter Transaction ID:");
