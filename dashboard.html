@@ -1,175 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>User Dashboard</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
   <link rel="stylesheet" href="style.css">
-  <style>
-    body {
-      background: #121212;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-    .dashboard {
-      max-width: 1000px;
-      margin: 30px auto;
-      padding: 20px;
-    }
-    .card {
-      background: #1a1a1a;
-      padding: 20px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.6);
-    }
-    .card h2 {
-      margin-bottom: 15px;
-    }
-    .balance {
-      font-size: 28px;
-      color: #00b894;
-      font-weight: bold;
-    }
-    .actions {
-      display: flex;
-      gap: 15px;
-      margin-top: 20px;
-    }
-    .actions a {
-      flex: 1;
-      text-align: center;
-      background: #00b894;
-      padding: 12px;
-      border-radius: 8px;
-      color: #fff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .actions a:hover {
-      background: #019875;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      border: 1px solid #444;
-      padding: 10px;
-      text-align: center;
-      font-size: 14px;
-    }
-    th {
-      background: #222;
-    }
-    .type-deposit {
-      color: #00ff99;
-      font-weight: bold;
-    }
-    .type-withdraw {
-      color: #ff4d4d;
-      font-weight: bold;
-    }
-  </style>
 </head>
 <body>
+  <div class="dashboard-container">
+    <h2>📊 Dashboard</h2>
 
-  <div class="dashboard">
-    
-    <!-- Balance Card -->
-    <div class="card">
-      <h2>Wallet Balance</h2>
-      <p class="balance" id="userBalance">$0.00</p>
-    </div>
+    <h3>Deposits</h3>
+    <table id="depositTable">
+      <tr><th>Name</th><th>Wallet</th><th>Amount</th><th>Status</th></tr>
+    </table>
 
-    <!-- Actions Card -->
-    <div class="card">
-      <h2>Quick Actions</h2>
-      <div class="actions">
-        <a href="deposit.html">💰 Deposit</a>
-        <a href="withdraw.html">💸 Withdraw</a>
-      </div>
-    </div>
-
-    <!-- History Card -->
-    <div class="card">
-      <h2>Transaction History</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Name</th>
-            <th>Chain</th>
-            <th>Address</th>
-            <th>Amount</th>
-            <th>Date</th>
-          </tr>
-        </thead>
-        <tbody id="txHistory"></tbody>
-      </table>
-    </div>
-
+    <h3>Withdrawals</h3>
+    <table id="withdrawTable">
+      <tr><th>Name</th><th>Wallet</th><th>Amount</th><th>Status</th></tr>
+    </table>
   </div>
 
   <script>
-    function loadDashboard() {
-      const depositHistory = JSON.parse(localStorage.getItem("depositHistory")) || [];
-      const withdrawHistory = JSON.parse(localStorage.getItem("withdrawHistory")) || [];
+    const API_BASE = "https://betwin-backend.onrender.com";
 
-      // Combine all
-      let allTx = [];
-
-      depositHistory.forEach(d => {
-        allTx.push({
-          type: "Deposit",
-          name: d.name,
-          chain: d.chain,
-          address: d.address || "—",
-          amount: d.amount,
-          date: d.date
-        });
+    async function loadData() {
+      let deposits = await fetch(`${API_BASE}/api/deposit`).then(r => r.json());
+      let depositTable = document.getElementById("depositTable");
+      deposits.forEach(d => {
+        let row = depositTable.insertRow();
+        row.insertCell(0).textContent = d.username;
+        row.insertCell(1).textContent = d.wallet;
+        row.insertCell(2).textContent = d.amount;
+        row.insertCell(3).textContent = d.status || "Pending";
       });
 
-      withdrawHistory.forEach(w => {
-        allTx.push({
-          type: "Withdraw",
-          name: w.name,
-          chain: w.chain,
-          address: w.address,
-          amount: w.amount,
-          date: w.date
-        });
+      let withdraws = await fetch(`${API_BASE}/api/withdraw`).then(r => r.json());
+      let withdrawTable = document.getElementById("withdrawTable");
+      withdraws.forEach(w => {
+        let row = withdrawTable.insertRow();
+        row.insertCell(0).textContent = w.username;
+        row.insertCell(1).textContent = w.wallet;
+        row.insertCell(2).textContent = w.amount;
+        row.insertCell(3).textContent = w.status || "Pending";
       });
-
-      // Sort by date (latest first)
-      allTx.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      // Render table
-      const tbody = document.getElementById("txHistory");
-      tbody.innerHTML = "";
-      let balance = 0;
-
-      allTx.forEach(tx => {
-        if(tx.type === "Deposit") balance += parseFloat(tx.amount);
-        if(tx.type === "Withdraw") balance -= parseFloat(tx.amount);
-
-        tbody.innerHTML += `
-          <tr>
-            <td class="${tx.type === "Deposit" ? "type-deposit" : "type-withdraw"}">${tx.type}</td>
-            <td>${tx.name}</td>
-            <td>${tx.chain}</td>
-            <td>${tx.address}</td>
-            <td>$${tx.amount}</td>
-            <td>${tx.date}</td>
-          </tr>
-        `;
-      });
-
-      document.getElementById("userBalance").innerText = `$${balance.toFixed(2)}`;
     }
 
-    window.onload = loadDashboard;
+    loadData();
   </script>
-
 </body>
 </html>
