@@ -8,12 +8,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-<body style="margin-top:20px;">
-  
   <header class="appbar">
     <div class="left">
-      
-    <body style="margin-top:20px;">
+      <div class=" ">BW</div>
       <div class="logo">BW</div>
       <div class="brand">
         <div class="title">BETWIN</div>
@@ -59,13 +56,13 @@
         <div class="lane up">
           <div class="lane-head">UP</div>
           <div class="lane-total">$<span id="upTotal">0.00</span></div>
-          <div class="bots-list" id="up-botsList"></div>
+          <div class="bots-list" id="upBotsList"></div>
         </div>
 
         <div class="lane down">
           <div class="lane-head">DOWN</div>
           <div class="lane-total">$<span id="downTotal">0.00</span></div>
-          <div class="bots-list" id="down-botsList"></div>
+          <div class="bots-list" id="downBotsList"></div>
         </div>
       </div>
 
@@ -106,7 +103,7 @@
   <div id="withdrawModal" class="modal hidden">
     <div class="modal-card">
       <div class="modal-head"><h3>Withdraw</h3><button class="icon-btn" data-close="withdrawModal">✕</button></div>
-      <div class="modal-body">
+    <div class="modal-body">
         <p class="muted">Minimum withdrawal: <b>$5</b>. Admin approval required.</p>
         <input id="wdAmount" type="number" min="5" step="0.01" placeholder="Amount ($ ≥ 5)" />
         <input id="wdWallet" placeholder="Destination wallet address" />
@@ -119,7 +116,7 @@
     </div>
   </div>
 
-  <footer class="footer">© 2025 BETWIN</footer>
+  <footer class="footer">© 2025 Market Battle — Demo</footer>
 
   <script src="script.js"></script>
 </body>
