@@ -1,237 +1,130 @@
-/* Market Battle — Real Backend Frontend */
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BETWIN</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="appbar">
+    <div class="left">
+      <div class="logo">BW</div>
+      <div class="brand">
+        <div class="title">BETWIN</div>
+        <div class="sub">REAL CASH</div>
+      </div>
+    </div>
 
-/* --------------- Config / Backend URL --------------- */
-const BACKEND_URL = 'https://betwin-winn.onrender.com';
+    <div class="right">
+      <div class="wallet">
+        <div class="wallet-addr" id="walletAddr">0xYourWalletHereABC123</div>
+      </div>
+      <div class="balance-pill">Balance: $<span id="balance">0.00</span></div>
+      <button id="openDeposit" class="btn primary">Deposit</button>
+      <button id="openWithdraw" class="btn ghost">Withdraw</button>
+    </div>
+  </header>
 
-/* --------------- Persistence keys --------------- */
-const K = {
-  BAL: 'mb_bal_v1',
-  SERIES: 'mb_series_v1',
-  EPOCH: 'mb_epoch_v1',
-  ROUND: 'mb_round_v1',
-  START_PRICE: 'mb_start_price_v1',
-  UP_TOTAL: 'mb_up_total_v1',
-  DOWN_TOTAL: 'mb_down_total_v1',
-  MY_BETS: 'mb_my_bets_v1',
-  DEPOSITS: 'mb_deposits_v1'
-};
+  <main class="container">
+    <section class="card chart-card">
+      <div class="chart-top">
+        <div class="pair">BTC/USDT</div>
+        <div class="tags">
+          <span class="tag">20s Bet</span>
+          <span class="tag">5s Result</span>
+          <span class="tag live">Live</span>
+        </div>
+      </div>
 
-/* --------------- Config --------------- */
-const BET_WINDOW = 20;
-const RESULT_WINDOW = 5;
-const CYCLE = BET_WINDOW + RESULT_WINDOW;
-const BOT_MIN = 8, BOT_MAX = 20;
-const BOT_MIN_AMT = 0.5, BOT_MAX_AMT = 25;
+      <div class="chart-wrap">
+        <canvas id="priceChart"></canvas>
+        <div class="floating" id="floatingPrice">
+          <span id="priceArrow">▲</span> <span id="priceVal">$0.000</span>
+        </div>
+        <div class="round-info">
+          <div class="pill">Round <b id="roundNum">1</b></div>
+          <div class="pill">Phase <b id="phase">—</b></div>
+          <div class="pill">Timer <b id="timer">—s</b></div>
+          <div class="pill">Players <b id="players">—</b></div>
+        </div>
+      </div>
 
-/* --------------- Helpers / DOM --------------- */
-const $ = id => document.getElementById(id);
-const fmt = n => Number(n).toFixed(2);
-const now = () => Date.now();
+      <div class="lanes">
+        <div class="lane up">
+          <div class="lane-head">UP</div>
+          <div class="lane-total">$<span id="upTotal">0.00</span></div>
+          <div class="bots-list" id="upBotsList"></div>
+        </div>
 
-/* DOM refs */
-const balEl = $('balance'), roundEl = $('roundNum'), phaseEl = $('phase'),
-      timerEl = $('timer'), playersEl = $('players') || { textContent: '' },
-      upTotalEl = $('upTotal'), downTotalEl = $('downTotal'),
-      upBotsList = $('upBotsList'), downBotsList = $('downBotsList'),
-      activity = $('activity'), priceVal = $('priceVal'), priceArrow = $('priceArrow');
+        <div class="lane down">
+          <div class="lane-head">DOWN</div>
+          <div class="lane-total">$<span id="downTotal">0.00</span></div>
+          <div class="bots-list" id="downBotsList"></div>
+        </div>
+      </div>
 
-/* --------------- Fetch Real Balance --------------- */
-let balance = 0;
-async function fetchBalance(){
-    try{
-        const res = await fetch(`${BACKEND_URL}/balance`);
-        const data = await res.json();
-        if(data.balance !== undefined){
-            balance = data.balance;
-            balEl.textContent = fmt(balance);
-        }
-    } catch(e){ console.error('Balance fetch failed', e); }
-}
-fetchBalance();
+      <div class="controls">
+        <input id="betAmount" type="number" min="0.1" step="0.1" placeholder="Amount ($)" />
+        <button id="betUp" class="btn success">Bet UP</button>
+        <button id="betDown" class="btn danger">Bet DOWN</button>
+      </div>
 
-/* --------------- Initial state --------------- */
-let series = (() => {
-  try { const s = JSON.parse(localStorage.getItem(K.SERIES) || '[]'); if (Array.isArray(s) && s.length) return s; } catch {}
-  const seed = +(100 + Math.random()*3).toFixed(3);
-  return [seed];
-})();
-localStorage.setItem(K.SERIES, JSON.stringify(series));
+      <div class="activity" id="activity">
+        <div class="hint">Recent activity will appear here…</div>
+      </div>
+    </section>
+  </main>
 
-function getEpoch(){ let e = parseInt(localStorage.getItem(K.EPOCH) || '0',10); if(!e){ e = now(); localStorage.setItem(K.EPOCH, String(e)); } return e; }
-function setEpoch(t){ localStorage.setItem(K.EPOCH, String(t)); }
-function getRound(){ let r = parseInt(localStorage.getItem(K.ROUND) || '1',10); if(!r){ r = 1; localStorage.setItem(K.ROUND,'1'); } return r; }
-function setRound(n){ localStorage.setItem(K.ROUND, String(n)); roundEl.textContent = n; }
-function getStartPrice(){ return parseFloat(localStorage.getItem(K.START_PRICE) || String(series[series.length-1])); }
-function setStartPrice(v){ localStorage.setItem(K.START_PRICE, String(v)); }
+  <!-- Deposit Modal -->
+  <div id="depositModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Deposit</h3>
+        <button class="icon-btn" data-close="depositModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted">Send funds to selected wallet then paste Transaction ID. Admin approval required. Welcome bonus $1 once.</p>
+        
+        <div class="wallet-row">
+          <div class="label">Select Wallet</div>
+          <select id="depositWalletSelect" class="wallet-dropdown"></select>
+          <button class="mini ghost" id="copyDepositWallet">Copy</button>
+        </div>
 
-let epoch = getEpoch();
-let roundNum = getRound();
-roundEl.textContent = roundNum;
-if (!localStorage.getItem(K.START_PRICE)) setStartPrice(series[series.length-1]);
+        <input id="depositTxn" placeholder="Transaction ID" />
+        <div class="row gap">
+          <button id="submitDeposit" class="btn primary">Submit</button>
+          <button class="btn" data-close="depositModal">Cancel</button>
+        </div>
+        <div id="depositMsg" class="muted"></div>
+      </div>
+    </div>
+  </div>
 
-let totals = { up: parseFloat(localStorage.getItem(K.UP_TOTAL) || '0'), down: parseFloat(localStorage.getItem(K.DOWN_TOTAL) || '0') };
-upTotalEl.textContent = fmt(totals.up); downTotalEl.textContent = fmt(totals.down);
-let myBets = (()=> { try{ return JSON.parse(localStorage.getItem(K.MY_BETS)||'[]'); }catch{return [];} })();
+  <!-- Withdraw Modal -->
+  <div id="withdrawModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Withdraw</h3>
+        <button class="icon-btn" data-close="withdrawModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted">Minimum withdrawal: <b>$5</b>. Admin approval required.</p>
+        <input id="wdAmount" type="number" min="5" step="0.01" placeholder="Amount ($ ≥ 5)" />
+        <input id="wdWallet" placeholder="Destination wallet address" />
+        <div class="row gap">
+          <button id="submitWithdraw" class="btn primary">Submit</button>
+          <button class="btn" data-close="withdrawModal">Cancel</button>
+        </div>
+        <div id="withdrawMsg" class="muted"></div>
+      </div>
+    </div>
+  </div>
 
-/* --------------- Chart setup --------------- */
-const ctx = document.getElementById('priceChart').getContext('2d');
-let upColor = '#00d27a', downColor = '#ff4d4f';
-function gradient(up=true){
-  const g = ctx.createLinearGradient(0,0,0,360);
-  if(up){ g.addColorStop(0,'rgba(0,210,122,.18)'); g.addColorStop(1,'rgba(0,210,122,.04)'); }
-  else { g.addColorStop(0,'rgba(255,77,79,.16)'); g.addColorStop(1,'rgba(255,77,79,.04)'); }
-  return g;
-}
-const chart = new Chart(ctx, {
-  type:'line',
-  data:{ labels: series.map((_,i)=>i), datasets:[{
-    data: series,
-    borderColor: upColor,
-    backgroundColor: gradient(true),
-    borderWidth:2.4, pointRadius:0, tension:0.35, fill:true
-  }]},
-  options:{ animation:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false}, y:{display:false}}, responsive:true, maintainAspectRatio:false }
-});
+  <footer class="footer">© 2025 BETWIN — Real Cash</footer>
 
-/* --------------- Smooth price engine --------------- */
-let target = series[series.length-1];
-let start = target;
-let segStart = performance.now();
-const SEG_MS = 900;
-function pickTarget(){
-  const drift = (Math.random()-0.5)*1.6;
-  start = target;
-  target = Math.max(10, +(target + drift).toFixed(3));
-  segStart = performance.now();
-}
-setInterval(pickTarget, SEG_MS);
-
-function frame(ts){
-  const p = Math.min(1, (ts - segStart)/SEG_MS);
-  const current = start + (target - start) * p;
-  series.push(+current.toFixed(3));
-  if(series.length > 240) series.shift();
-  chart.data.datasets[0].data = series;
-  const up = current >= series[series.length-2];
-  chart.data.datasets[0].borderColor = up ? upColor : downColor;
-  chart.data.datasets[0].backgroundColor = gradient(up);
-  chart.update('none');
-
-  if (priceVal) priceVal.textContent = '$' + (+current).toFixed(3);
-  if (priceArrow) priceArrow.textContent = up ? '▲' : '▼';
-
-  localStorage.setItem(K.SERIES, JSON.stringify(series));
-  requestAnimationFrame(frame);
-}
-requestAnimationFrame(frame);
-
-/* --------------- Round state computed from epoch --------------- */
-function computeState(){
-  const elapsed = Math.floor((now() - epoch)/1000);
-  const pos = elapsed % CYCLE;
-  const inBet = pos < BET_WINDOW;
-  const timeLeft = inBet ? (BET_WINDOW - pos) : (CYCLE - pos);
-  phaseEl.textContent = inBet ? 'BETTING' : 'RESULT';
-  timerEl.textContent = timeLeft + 's';
-  return {pos, inBet, timeLeft};
-}
-
-/* --------------- Bots generator --------------- */
-const BOT_NAMES = ['Alpha','Beta','CryptoKing','NehaX','Rahul23','Satoshi','Luna','Mira','Vikram','Zara','Khan','Jai','Priya','Robo1','TraderZ','Nina','Sai','Rex','Kira','Leo','Tara','Ishan','Maya','Oz','Kai','Rohit','Asha'];
-function randName(){ return BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)] + Math.floor(Math.random()*90+10); }
-function randAmt(){ return +(Math.random()*(BOT_MAX_AMT - BOT_MIN_AMT) + BOT_MIN_AMT).toFixed(2); }
-function makeAvatarInitials(name){ return name.split(/[^A-Za-z0-9]/).map(s=>s[0]).slice(0,2).join('').toUpperCase(); }
-
-function genBotsForSide(count, side){
-  const arr = [];
-  for(let i=0;i<count;i++){
-    const name = randName();
-    arr.push({ id: name + '_' + Math.floor(Math.random()*99999), name, avatar: makeAvatarInitials(name), amount: randAmt(), side });
-  }
-  return arr;
-}
-
-function renderBots(upBots, downBots){
-  upBotsList.innerHTML = upBots.map(b => `
-    <div class="bot"><div class="avatar" style="background:#0b2">${b.avatar}</div>
-    <div class="meta"><div class="name">${b.name}</div><div class="meta-sub">${b.side.toUpperCase()}</div></div>
-    <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
-  downBotsList.innerHTML = downBots.map(b => `
-    <div class="bot"><div class="avatar" style="background:#f66">${b.avatar}</div>
-    <div class="meta"><div class="name">${b.name}</div><div class="meta-sub">${b.side.toUpperCase()}</div></div>
-    <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
-}
-
-/* --------------- Place User Bet (same demo logic) --------------- */
-function placeBetUser(side){
-  const amt = parseFloat($('betAmount').value || '0');
-  if(!(amt > 0)) return toast('Enter valid amount');
-  const s = computeState();
-  if(!s.inBet) return toast('Betting closed for this round');
-  if(balance < amt) return toast('Insufficient balance');
-
-  balance = +(balance - amt).toFixed(2); balEl.textContent = fmt(balance);
-  if(side==='up') totals.up = +(totals.up + amt).toFixed(2); else totals.down = +(totals.down + amt).toFixed(2);
-  setTotals(totals.up, totals.down);
-
-  myBets.push({ round:getRound(), side, amount:amt });
-  localStorage.setItem(K.MY_BETS, JSON.stringify(myBets));
-
-  log(`You bet $${fmt(amt)} on ${side.toUpperCase()}`);
-}
-$('betUp').addEventListener('click', ()=> placeBetUser('up'));
-$('betDown').addEventListener('click', ()=> placeBetUser('down'));
-function setTotals(u,d){ upTotalEl.textContent = fmt(u); downTotalEl.textContent = fmt(d); }
-
-/* --------------- Deposit / Withdraw — Real Backend --------------- */
-$('submitDeposit').addEventListener('click', async ()=>{
-  const txn = $('depositTxn').value.trim();
-  const wallet = $('depositWalletSelect').value;
-  if(!txn){ toast('Enter transaction ID'); return; }
-  try{
-      const res = await fetch(`${BACKEND_URL}/deposit`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({txn,wallet})
-      });
-      const data = await res.json();
-      if(data.success){
-          toast('Deposit submitted — pending admin approval');
-          $('depositTxn').value = '';
-          closeModal('depositModal');
-          fetchBalance();
-      } else toast(data.message || 'Deposit failed');
-  } catch(e){ console.error(e); toast('Deposit error'); }
-});
-
-$('submitWithdraw').addEventListener('click', async ()=>{
-  const amt = parseFloat($('wdAmount').value||'0'); const wal = $('wdWallet').value.trim();
-  if(!(amt>=5)){ $('withdrawMsg').textContent='Minimum $5 required'; return; }
-  if(amt>balance){ $('withdrawMsg').textContent='Insufficient balance'; return; }
-  if(!wal){ $('withdrawMsg').textContent='Enter wallet address'; return; }
-
-  try{
-      const res = await fetch(`${BACKEND_URL}/withdraw`,{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({amount:amt,wallet:wal})
-      });
-      const data = await res.json();
-      if(data.success){
-          $('withdrawMsg').textContent='Withdraw request submitted — pending admin';
-          balance -= amt; balEl.textContent=fmt(balance);
-          $('wdAmount').value=''; $('wdWallet').value='';
-          closeModal('withdrawModal');
-      } else $('withdrawMsg').textContent=data.message || 'Withdraw failed';
-  } catch(e){ console.error(e); $('withdrawMsg').textContent='Withdraw error'; }
-});
-
-/* --------------- Init Modals / Wallets --------------- */
-$('openDeposit').addEventListener('click', ()=> openModal('depositModal'));
-$('openWithdraw').addEventListener('click', ()=> openModal('withdrawModal'));
-document.querySelectorAll('[data-close]').forEach(btn => btn.addEventListener('click', e => closeModal(e.currentTarget.getAttribute('data-close'))));
-function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
-function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
-
-/* --------------- Deposit Wallet Dropdown --------------- */
-const
+  <script src="script.js"></script>
+</body>
+</html>
