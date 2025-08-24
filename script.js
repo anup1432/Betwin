@@ -1,9 +1,15 @@
-/* ------------------ Config ------------------ */
-const API_URL = "https://betwin-winn.onrender.com"; // aapka backend URL
+/* ---------------- Config ---------------- */
+const BACKEND_URL = "https://betwin-winn.onrender.com"; // ya local: "http://localhost:5000"
+
+/* ---------------- Helpers ---------------- */
 const $ = id => document.getElementById(id);
 const fmt = n => Number(n).toFixed(2);
 
-/* ------------------ Initial UI refs ------------------ */
+/* ---------------- User State ---------------- */
+let balance = 0;
+let myBets = [];
+
+/* ---------------- DOM Elements ---------------- */
 const balEl = $('balance');
 const roundEl = $('roundNum');
 const phaseEl = $('phase');
@@ -17,129 +23,128 @@ const activity = $('activity');
 const priceVal = $('priceVal');
 const priceArrow = $('priceArrow');
 
-/* ------------------ Chart setup ------------------ */
+/* ---------------- Chart Setup ---------------- */
 const ctx = document.getElementById('priceChart').getContext('2d');
-let series = [100]; // initial seed
+let series = [100];
+let upColor = '#00d27a', downColor = '#ff4d4f';
+function gradient(up=true){
+  const g = ctx.createLinearGradient(0,0,0,360);
+  if(up){ g.addColorStop(0,'rgba(0,210,122,.18)'); g.addColorStop(1,'rgba(0,210,122,.04)'); }
+  else { g.addColorStop(0,'rgba(255,77,79,.16)'); g.addColorStop(1,'rgba(255,77,79,.04)'); }
+  return g;
+}
 const chart = new Chart(ctx, {
   type:'line',
-  data:{ labels: series.map((_,i)=>i), datasets:[{
-    data: series,
-    borderColor: '#00d27a',
-    backgroundColor: 'rgba(0,210,122,0.1)',
-    borderWidth:2.4, pointRadius:0, tension:0.35, fill:true
-  }]},
+  data:{ labels: series.map((_,i)=>i), datasets:[{ data: series, borderColor: upColor, backgroundColor: gradient(true), borderWidth:2.4, pointRadius:0, tension:0.35, fill:true }]},
   options:{ animation:false, plugins:{legend:{display:false},tooltip:{enabled:false}}, scales:{x:{display:false}, y:{display:false}}, responsive:true, maintainAspectRatio:false }
 });
 
-/* ------------------ Backend helpers ------------------ */
-async function getBalance() {
-  const res = await fetch(`${API_URL}/balance`);
-  const data = await res.json();
-  if(data.ok) balEl.textContent = fmt(data.balance);
+/* ---------------- Smooth price engine ---------------- */
+let target = series[0];
+let start = target;
+let segStart = performance.now();
+const SEG_MS = 900;
+function pickTarget(){
+  const drift = (Math.random()-0.5)*1.6;
+  start = target;
+  target = Math.max(10, +(target + drift).toFixed(3));
+  segStart = performance.now();
 }
-async function getRoundData() {
-  const res = await fetch(`${API_URL}/round`);
-  const data = await res.json();
-  if(!data.ok) return;
-  // Update UI
-  roundEl.textContent = data.round;
-  phaseEl.textContent = data.phase.toUpperCase();
-  timerEl.textContent = data.timeLeft + "s";
-  upTotalEl.textContent = fmt(data.totals.up);
-  downTotalEl.textContent = fmt(data.totals.down);
-  priceVal.textContent = "$" + fmt(data.price);
-  priceArrow.textContent = data.up ? "▲" : "▼";
-  renderBots(data.bots.up, data.bots.down);
+setInterval(pickTarget, SEG_MS);
+
+function frame(ts){
+  const p = Math.min(1, (ts - segStart)/SEG_MS);
+  const current = start + (target - start) * p;
+  series.push(+current.toFixed(3));
+  if(series.length > 240) series.shift();
+  chart.data.datasets[0].data = series;
+  const up = current >= series[series.length-2];
+  chart.data.datasets[0].borderColor = up ? upColor : downColor;
+  chart.data.datasets[0].backgroundColor = gradient(up);
+  chart.update('none');
+
+  if (priceVal) priceVal.textContent = '$' + (+current).toFixed(3);
+  if (priceArrow) priceArrow.textContent = up ? '▲' : '▼';
+
+  requestAnimationFrame(frame);
 }
-async function placeBet(side, amount) {
-  const res = await fetch(`${API_URL}/bet`, {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ side, amount })
-  });
-  const data = await res.json();
-  if(data.ok){
-    log(`You bet $${fmt(amount)} on ${side.toUpperCase()}`);
-    getBalance();
-  } else log(data.msg || "Bet failed");
-}
-async function submitDeposit(txn, wallet) {
-  const res = await fetch(`${API_URL}/deposit`, {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ txn, wallet })
-  });
-  const data = await res.json();
-  $('depositMsg').textContent = data.msg || "";
-  if(data.ok) closeModal('depositModal');
-}
-async function submitWithdraw(amount, wallet) {
-  const res = await fetch(`${API_URL}/withdraw`, {
-    method:"POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ amount, wallet })
-  });
-  const data = await res.json();
-  $('withdrawMsg').textContent = data.msg || "";
-  if(data.ok) closeModal('withdrawModal');
+requestAnimationFrame(frame);
+
+/* ---------------- Bets ---------------- */
+$('betUp').addEventListener('click', ()=> placeBet('up'));
+$('betDown').addEventListener('click', ()=> placeBet('down'));
+
+async function placeBet(side){
+  const amt = parseFloat($('betAmount').value || '0');
+  if(!(amt>0)) return toast('Enter valid amount');
+  if(balance < amt) return toast('Insufficient balance');
+
+  // Send bet to backend
+  try{
+    const res = await fetch(BACKEND_URL+'/bet', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ side, amount: amt })
+    });
+    const data = await res.json();
+    if(data.ok){
+      balance -= amt;
+      setBalance(balance);
+      myBets.push({ side, amount: amt });
+      log(`You bet $${fmt(amt)} on ${side.toUpperCase()}`);
+    } else toast(data.msg || 'Bet failed');
+  }catch(e){ toast('Server error'); }
 }
 
-/* ------------------ Bots rendering ------------------ */
-function renderBots(upBots=[], downBots=[]) {
-  upBotsList.innerHTML = upBots.map(b => `
-    <div class="bot"><div class="avatar" style="background:#0b2">${b.avatar}</div>
-    <div class="meta"><div class="name">${b.name}</div><div class="meta-sub">UP</div></div>
-    <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
-  downBotsList.innerHTML = downBots.map(b => `
-    <div class="bot"><div class="avatar" style="background:#f66">${b.avatar}</div>
-    <div class="meta"><div class="name">${b.name}</div><div class="meta-sub">DOWN</div></div>
-    <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
-}
-
-/* ------------------ Activity log ------------------ */
-function log(msg){
-  const row = document.createElement('div');
-  row.className='row';
-  const t = new Date().toLocaleTimeString();
-  row.innerHTML=`<span>${t}</span><span>${msg}</span>`;
-  activity.querySelector('.hint')?.remove();
-  activity.prepend(row);
-  while(activity.children.length>40) activity.lastChild.remove();
-}
-
-/* ------------------ UI Events ------------------ */
-$('betUp').addEventListener('click',()=> {
-  const amt=parseFloat($('betAmount').value||'0'); 
-  if(amt>0) placeBet('up', amt);
-});
-$('betDown').addEventListener('click',()=> {
-  const amt=parseFloat($('betAmount').value||'0'); 
-  if(amt>0) placeBet('down', amt);
+/* ---------------- Deposit ---------------- */
+$('submitDeposit').addEventListener('click', async ()=>{
+  const txn = $('depositTxn').value.trim();
+  const wallet = $('depositWalletSelect').value;
+  if(!txn) return toast('Enter transaction ID');
+  try{
+    const res = await fetch(BACKEND_URL+'/deposit', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ txn, wallet })
+    });
+    const data = await res.json();
+    if(data.ok){ toast('Deposit submitted — pending approval'); $('depositTxn').value=''; closeModal('depositModal'); }
+    else toast(data.msg || 'Deposit failed');
+  }catch(e){ toast('Server error'); }
 });
 
-/* Deposit modal */
-$('openDeposit').addEventListener('click',()=>openModal('depositModal'));
-$('openWithdraw').addEventListener('click',()=>openModal('withdrawModal'));
-document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click', e=>closeModal(e.currentTarget.dataset.close)));
-function openModal(id){ $(id).classList.remove('hidden'); }
-function closeModal(id){ $(id).classList.add('hidden'); }
-
-/* Deposit / Withdraw submit */
-$('submitDeposit').addEventListener('click',()=> {
-  const txn=$('depositTxn').value.trim();
-  const wallet=$('depositWalletSelect')?.value;
-  if(txn && wallet) submitDeposit(txn, wallet);
+/* ---------------- Withdraw ---------------- */
+$('submitWithdraw').addEventListener('click', async ()=>{
+  const amt = parseFloat($('wdAmount').value||'0');
+  const wal = $('wdWallet').value.trim();
+  if(!(amt>=5)) return $('withdrawMsg').textContent='Minimum $5 required';
+  if(amt > balance) return $('withdrawMsg').textContent='Insufficient balance';
+  try{
+    const res = await fetch(BACKEND_URL+'/withdraw', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ amount: amt, wallet: wal })
+    });
+    const data = await res.json();
+    if(data.ok){
+      balance -= amt;
+      setBalance(balance);
+      $('wdAmount').value=''; $('wdWallet').value=''; $('withdrawMsg').textContent='Withdraw request submitted';
+      closeModal('withdrawModal');
+    }else $('withdrawMsg').textContent=data.msg||'Withdraw failed';
+  }catch(e){ $('withdrawMsg').textContent='Server error'; }
 });
-$('submitWithdraw').addEventListener('click',()=> {
-  const amt=parseFloat($('wdAmount').value||'0'); 
-  const wal=$('wdWallet').value.trim();
-  if(amt>=5 && wal) submitWithdraw(amt, wal);
-});
 
-/* ------------------ Init ------------------ */
-async function init() {
-  await getBalance();
-  await getRoundData();
-  setInterval(getRoundData, 1500); // refresh every 1.5s
-}
-init();
+/* ---------------- Utility ---------------- */
+function setBalance(v){ balance=v; balEl.textContent=fmt(v); }
+function log(msg){ const row=document.createElement('div'); row.innerHTML=`<span>${new Date().toLocaleTimeString()}</span> <span>${msg}</span>`; activity.prepend(row); while(activity.children.length>40) activity.lastChild.remove(); }
+function toast(msg){ log(msg); }
+
+/* ---------------- Modal ---------------- */
+document.querySelectorAll('[data-close]').forEach(btn=>btn.addEventListener('click', e=>closeModal(e.getAttribute('data-close'))));
+function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+
+/* ---------------- Init ---------------- */
+setBalance(balance);
+log('Welcome — connected to backend!');
