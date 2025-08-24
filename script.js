@@ -1,4 +1,3 @@
-Script.js
 
 /* Market Battle — Frontend demo (bots both sides 8–20 each round) */
 
