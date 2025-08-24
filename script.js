@@ -1,112 +1,112 @@
-// Fake price generator
-let price = 100;
-let priceHistory = [];
-const canvas = document.getElementById("chartCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = canvas.offsetWidth;
-canvas.height = canvas.offsetHeight;
+// -------------------- GRAPH + GAME LOGIC --------------------
+const ctx = document.getElementById("priceChart").getContext("2d");
+let price = 100; // starting price
+let labels = [];
+let data = [];
+let roundStartPrice = price;
 
-function updatePrice() {
-  const change = (Math.random() - 0.5) * 2;
-  price += change;
-  priceHistory.push(price);
-  if (priceHistory.length > 50) priceHistory.shift();
-  document.getElementById("livePrice").textContent = "$" + price.toFixed(2);
-}
-function drawChart() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.beginPath();
-  ctx.moveTo(0, canvas.height - priceHistory[0]);
-  for (let i = 1; i < priceHistory.length; i++) {
-    ctx.lineTo((i / priceHistory.length) * canvas.width, canvas.height - priceHistory[i]);
+let chart = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: labels,
+    datasets: [{
+      label: "Price",
+      data: data,
+      borderColor: "#00ff99",
+      borderWidth: 2,
+      fill: true,
+      backgroundColor: "rgba(0,255,153,0.1)",
+      tension: 0.4
+    }]
+  },
+  options: {
+    animation: false,
+    scales: { x: { display: false }, y: { display: true } },
+    plugins: { legend: { display: false } }
   }
-  ctx.strokeStyle = "#0f0";
-  ctx.stroke();
+});
+
+// -------------------- GAME STATE --------------------
+let balance = localStorage.getItem("balance") ? parseFloat(localStorage.getItem("balance")) : 1; // $1 bonus
+document.getElementById("balance").innerText = balance.toFixed(2);
+
+let bets = { up: 0, down: 0 }; 
+let currentBet = null;
+let roundTime = 20; // 20s betting
+let resultTime = 5; // 5s result
+let timer = roundTime;
+let inResult = false;
+
+// -------------------- PRICE GENERATOR --------------------
+function updatePrice() {
+  let change = (Math.random() - 0.5) * 2; // random -1 to +1
+  price = Math.max(50, price + change); // avoid negative
+  labels.push("");
+  data.push(price);
+  if (labels.length > 50) {
+    labels.shift();
+    data.shift();
+  }
+  chart.update();
 }
+setInterval(updatePrice, 1000);
 
-// Balance
-let balance = parseFloat(localStorage.getItem("balance")) || 1.0;
-document.getElementById("balance").textContent = balance.toFixed(2);
-
-// Round system
-let roundDuration = 20;
-let resultDuration = 5;
-let phase = "betting"; // or "result"
-let timeLeft = roundDuration;
-
-function roundLoop() {
-  if (timeLeft <= 0) {
-    if (phase === "betting") {
-      phase = "result";
-      timeLeft = resultDuration;
-      document.getElementById("roundPhase").textContent = "Result Time!";
+// -------------------- TIMER --------------------
+setInterval(() => {
+  if (timer > 0) {
+    timer--;
+  } else {
+    if (!inResult) {
+      // betting phase over → show result
+      inResult = true;
+      timer = resultTime;
+      decideResult();
     } else {
-      phase = "betting";
-      timeLeft = roundDuration;
-      document.getElementById("roundPhase").textContent = "Place your bets!";
-      document.getElementById("upBets").innerHTML = "";
-      document.getElementById("downBets").innerHTML = "";
+      // result phase over → new round
+      inResult = false;
+      timer = roundTime;
+      roundStartPrice = price;
+      bets = { up: 0, down: 0 };
+      document.getElementById("upBets").innerText = "0";
+      document.getElementById("downBets").innerText = "0";
     }
   }
-  document.getElementById("roundTimer").textContent = timeLeft;
-  timeLeft--;
-}
-
-setInterval(() => {
-  updatePrice();
-  drawChart();
+  document.getElementById("timer").innerText = timer + "s";
 }, 1000);
 
-setInterval(roundLoop, 1000);
+// -------------------- BETTING --------------------
+function placeBet(direction, amount) {
+  if (amount <= 0 || amount > balance) return alert("Invalid bet amount!");
+  balance -= amount;
+  localStorage.setItem("balance", balance);
+  document.getElementById("balance").innerText = balance.toFixed(2);
 
-// Betting
-document.getElementById("betUp").onclick = () => placeBet("up");
-document.getElementById("betDown").onclick = () => placeBet("down");
+  bets[direction] += amount;
+  document.getElementById(direction + "Bets").innerText = bets[direction].toFixed(2);
+  currentBet = { direction, amount };
+}
 
-function placeBet(side) {
-  if (phase !== "betting") return alert("Betting closed!");
+document.getElementById("upBtn").onclick = () => {
   let amt = parseFloat(document.getElementById("betAmount").value);
-  if (!amt || amt <= 0 || amt > balance) return alert("Invalid amount");
-  balance -= amt;
-  localStorage.setItem("balance", balance);
-  document.getElementById("balance").textContent = balance.toFixed(2);
-  let li = document.createElement("li");
-  li.textContent = "$" + amt.toFixed(2);
-  document.getElementById(side + "Bets").appendChild(li);
-  logActivity("Bet $" + amt + " on " + side.toUpperCase());
-}
-
-// Activity log
-function logActivity(msg) {
-  let li = document.createElement("li");
-  li.textContent = msg;
-  document.getElementById("activityLog").prepend(li);
-}
-
-// Deposit Modal
-const depositModal = document.getElementById("depositModal");
-document.getElementById("depositBtn").onclick = () => depositModal.classList.remove("hidden");
-document.getElementById("closeDeposit").onclick = () => depositModal.classList.add("hidden");
-document.getElementById("submitDeposit").onclick = () => {
-  let txn = document.getElementById("txnId").value;
-  if (!txn) return alert("Enter Transaction ID");
-  logActivity("Deposit requested Txn: " + txn);
-  alert("Admin will approve your deposit.");
-  depositModal.classList.add("hidden");
+  placeBet("up", amt);
 };
 
-// Withdraw Modal
-const withdrawModal = document.getElementById("withdrawModal");
-document.getElementById("withdrawBtn").onclick = () => withdrawModal.classList.remove("hidden");
-document.getElementById("closeWithdraw").onclick = () => withdrawModal.classList.add("hidden");
-document.getElementById("submitWithdraw").onclick = () => {
-  let amt = parseFloat(document.getElementById("withdrawAmount").value);
-  if (!amt || amt < 5) return alert("Min withdrawal $5");
-  if (amt > balance) return alert("Not enough balance");
-  balance -= amt;
-  localStorage.setItem("balance", balance);
-  document.getElementById("balance").textContent = balance.toFixed(2);
-  logActivity("Withdraw requested $" + amt.toFixed(2));
-  alert("Admin will approve your withdrawal.");
-  withdrawModal.classList.add("hidden");
+document.getElementById("downBtn").onclick = () => {
+  let amt = parseFloat(document.getElementById("betAmount").value);
+  placeBet("down", amt);
 };
+
+// -------------------- RESULT --------------------
+function decideResult() {
+  let resultDir = price > roundStartPrice ? "up" : "down";
+  if (currentBet && currentBet.direction === resultDir) {
+    let winAmount = currentBet.amount * 2; // 2x payout
+    balance += winAmount;
+    alert("You Won! +" + winAmount.toFixed(2));
+  } else if (currentBet) {
+    alert("You Lost! -" + currentBet.amount.toFixed(2));
+  }
+  localStorage.setItem("balance", balance);
+  document.getElementById("balance").innerText = balance.toFixed(2);
+  currentBet = null;
+}
