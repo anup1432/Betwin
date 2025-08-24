@@ -2,78 +2,128 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Market Battle</title>
-  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
-  <!-- Header -->
-  <header>
-    <h1>Market Battle</h1>
-    <div class="balance">
-      Balance: $<span id="balance">0.00</span>
-      <button id="depositBtn">Deposit</button>
-      <button id="withdrawBtn">Withdraw</button>
+  <!-- Top App Bar -->
+  <header class="appbar">
+    <div class="brand">
+      <div class="logo">MB</div>
+      <div class="bt">
+        <div class="title">Market Battle</div>
+        <div class="sub">Predict • Win • Repeat</div>
+      </div>
+    </div>
+    <div class="act">
+      <div class="balance">Balance: $<span id="balance">0.00</span></div>
+      <button id="btnDeposit" class="btn primary">Deposit</button>
+      <button id="btnWithdraw" class="btn ghost">Withdraw</button>
     </div>
   </header>
 
-  <!-- Live Chart -->
-  <section class="chart-section">
-    <canvas id="chartCanvas"></canvas>
-    <div id="livePrice" class="live-price">$0.00</div>
-  </section>
-
-  <!-- Round Info -->
-  <section class="round-info">
-    <p>Round ends in <span id="roundTimer">20</span>s</p>
-    <p id="roundPhase">Place your bets!</p>
-  </section>
-
-  <!-- Betting Section -->
-  <section class="betting">
-    <input type="number" id="betAmount" placeholder="Enter Amount" min="1"/>
-    <div class="buttons">
-      <button id="betUp" class="up">UP</button>
-      <button id="betDown" class="down">DOWN</button>
-    </div>
-    <div class="lanes">
-      <div class="lane up-lane">
-        <h3>UP</h3>
-        <ul id="upBets"></ul>
+  <!-- Main -->
+  <main class="container">
+    <!-- Chart Card -->
+    <section class="card chart-card">
+      <div class="chart-header">
+        <div class="pair">BTC/USDT</div>
+        <div class="chips">
+          <span class="chip live">Live</span>
+          <span class="chip">Dark</span>
+          <span class="chip">Smooth</span>
+        </div>
       </div>
-      <div class="lane down-lane">
-        <h3>DOWN</h3>
-        <ul id="downBets"></ul>
-      </div>
-    </div>
-  </section>
 
-  <!-- Activity Log -->
-  <section class="log">
-    <h3>Activity</h3>
-    <ul id="activityLog"></ul>
-  </section>
+      <div class="chart-wrap">
+        <canvas id="priceChart"></canvas>
+
+        <div class="floating">
+          <span id="priceArrow">▲</span>
+          <span id="priceVal">$0.000</span>
+        </div>
+
+        <div class="roundbar">
+          <div class="pill">Round <b id="roundNum">—</b></div>
+          <div class="pill">Phase <b id="phase">—</b></div>
+          <div class="pill">Timer <b id="timer">—</b></div>
+          <div class="pill">Players <b id="players">—</b></div>
+        </div>
+      </div>
+
+      <!-- Lanes -->
+      <div class="lanes">
+        <div class="lane up">
+          <div class="lane-h">UP</div>
+          <div class="lane-v">$<span id="upTotal">0.00</span></div>
+        </div>
+        <div class="lane down">
+          <div class="lane-h">DOWN</div>
+          <div class="lane-v">$<span id="downTotal">0.00</span></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <input id="betAmount" type="number" min="0.1" step="0.1" placeholder="Amount ($)" />
+        <button id="betUp" class="btn success">Bet UP</button>
+        <button id="betDown" class="btn danger">Bet DOWN</button>
+      </div>
+
+      <!-- Activity -->
+      <div class="activity" id="activity">
+        <div class="hint">Recent activity will appear here…</div>
+      </div>
+    </section>
+  </main>
 
   <!-- Deposit Modal -->
   <div id="depositModal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Deposit</h2>
-      <p>Send payment to wallet: <b>0x12345ABCDEF</b></p>
-      <input type="text" id="txnId" placeholder="Enter Transaction ID"/>
-      <button id="submitDeposit">Submit</button>
-      <button id="closeDeposit">Close</button>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Deposit</h3>
+        <button class="icon-btn" data-close="depositModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted">Send funds to the wallet below, then paste your Transaction ID. Admin will approve. Welcome bonus $1 applies once.</p>
+        <div class="wallet-row">
+          <div class="label">Wallet</div>
+          <div class="value" id="depositWallet">0xYourWalletHereABC123</div>
+          <button class="btn mini" id="copyWallet">Copy</button>
+        </div>
+        <input id="depositTxn" placeholder="Paste Transaction ID" />
+        <div class="row gap">
+          <button id="submitDeposit" class="btn primary">Submit</button>
+          <button class="btn ghost" data-close="depositModal">Cancel</button>
+        </div>
+        <div id="depositMsg" class="muted"></div>
+      </div>
     </div>
   </div>
 
   <!-- Withdraw Modal -->
   <div id="withdrawModal" class="modal hidden">
-    <div class="modal-content">
-      <h2>Withdraw</h2>
-      <input type="number" id="withdrawAmount" placeholder="Enter Amount" min="5"/>
-      <button id="submitWithdraw">Submit</button>
-      <button id="closeWithdraw">Close</button>
+    <div class="modal-card">
+      <div class="modal-head">
+        <h3>Withdraw</h3>
+        <button class="icon-btn" data-close="withdrawModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="muted">Minimum withdrawal is $5. Requests are approved by admin.</p>
+        <input id="wdAmount" type="number" min="5" step="0.01" placeholder="Amount ($ ≥ 5)" />
+        <input id="wdWallet" placeholder="Destination wallet address" />
+        <div class="row gap">
+          <button id="submitWithdraw" class="btn primary">Submit</button>
+          <button class="btn ghost" data-close="withdrawModal">Cancel</button>
+        </div>
+        <div id="withdrawMsg" class="muted"></div>
+      </div>
     </div>
   </div>
+
+  <footer class="footer">© 2025 Market Battle (Frontend Demo)</footer>
 
   <script src="script.js"></script>
 </body>
