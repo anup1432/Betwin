@@ -27,18 +27,16 @@ const now = () => Date.now();
 
 /* DOM refs */
 const balEl = $('balance'), roundEl = $('roundNum'), phaseEl = $('phase'),
-      timerEl = $('timer'), playersEl = $('players') || { textContent: '' },
-      upTotalEl = $('upTotal'), downTotalEl = $('downTotal'),
-      upBotsList = $('upBotsList'), downBotsList = $('downBotsList'),
-      activity = $('activity'), priceVal = $('priceVal'), priceArrow = $('priceArrow');
+timerEl = $('timer'), playersEl = $('players') || { textContent: '' },
+upTotalEl = $('upTotal'), downTotalEl = $('downTotal'),
+upBotsList = $('upBotsList'), downBotsList = $('downBotsList'),
+activity = $('activity'), priceVal = $('priceVal'), priceArrow = $('priceArrow');
 
 /* --------------- Initial state --------------- */
-// balance: welcome $1 if unset
 let balance = parseFloat(localStorage.getItem(K.BAL));
 if (!Number.isFinite(balance)) { balance = 1; localStorage.setItem(K.BAL, String(balance)); }
 balEl.textContent = fmt(balance);
 
-// series: price points
 let series = (() => {
   try { const s = JSON.parse(localStorage.getItem(K.SERIES) || '[]'); if (Array.isArray(s) && s.length) return s; } catch {}
   const seed = +(100 + Math.random()*3).toFixed(3);
@@ -46,7 +44,6 @@ let series = (() => {
 })();
 localStorage.setItem(K.SERIES, JSON.stringify(series));
 
-// epoch/round/start price
 function getEpoch(){ let e = parseInt(localStorage.getItem(K.EPOCH) || '0',10); if(!e){ e = now(); localStorage.setItem(K.EPOCH, String(e)); } return e; }
 function setEpoch(t){ localStorage.setItem(K.EPOCH, String(t)); }
 function getRound(){ let r = parseInt(localStorage.getItem(K.ROUND) || '1',10); if(!r){ r = 1; localStorage.setItem(K.ROUND,'1'); } return r; }
@@ -59,7 +56,6 @@ let roundNum = getRound();
 roundEl.textContent = roundNum;
 if (!localStorage.getItem(K.START_PRICE)) setStartPrice(series[series.length-1]);
 
-// totals & my bets
 let totals = { up: parseFloat(localStorage.getItem(K.UP_TOTAL) || '0'), down: parseFloat(localStorage.getItem(K.DOWN_TOTAL) || '0') };
 upTotalEl.textContent = fmt(totals.up); downTotalEl.textContent = fmt(totals.down);
 let myBets = (()=> { try{ return JSON.parse(localStorage.getItem(K.MY_BETS)||'[]'); }catch{return [];} })();
@@ -100,7 +96,6 @@ setInterval(pickTarget, SEG_MS);
 function frame(ts){
   const p = Math.min(1, (ts - segStart)/SEG_MS);
   const current = start + (target - start) * p;
-  // push every frame but keep size reasonable
   series.push(+current.toFixed(3));
   if(series.length > 240) series.shift();
   chart.data.datasets[0].data = series;
@@ -109,7 +104,6 @@ function frame(ts){
   chart.data.datasets[0].backgroundColor = gradient(up);
   chart.update('none');
 
-  // floating price
   if (priceVal) priceVal.textContent = '$' + (+current).toFixed(3);
   if (priceArrow) priceArrow.textContent = up ? '▲' : '▼';
 
@@ -118,7 +112,7 @@ function frame(ts){
 }
 requestAnimationFrame(frame);
 
-/* --------------- Round state computed from epoch (refresh-safe) --------------- */
+/* --------------- Round state computed from epoch --------------- */
 function computeState(){
   const elapsed = Math.floor((now() - epoch)/1000);
   const pos = elapsed % CYCLE;
@@ -129,7 +123,7 @@ function computeState(){
   return {pos, inBet, timeLeft};
 }
 
-/* --------------- Bots generator (both sides 8–20 each) --------------- */
+/* --------------- Bots generator (both sides) --------------- */
 const BOT_NAMES = ['Alpha','Beta','CryptoKing','NehaX','Rahul23','Satoshi','Luna','Mira','Vikram','Zara','Khan','Jai','Priya','Robo1','TraderZ','Nina','Sai','Rex','Kira','Leo','Tara','Ishan','Maya','Oz','Kai','Rohit','Asha'];
 function randName(){ return BOT_NAMES[Math.floor(Math.random()*BOT_NAMES.length)] + Math.floor(Math.random()*90+10); }
 function randAmt(){ return +(Math.random()*(BOT_MAX_AMT - BOT_MIN_AMT) + BOT_MIN_AMT).toFixed(2); }
@@ -146,14 +140,8 @@ function genBotsForSide(count, side){
 
 /* Render bots lists to UI */
 function renderBots(upBots, downBots){
-  upBotsList.innerHTML = upBots.map(b => `
-    <div class="bot"><div class="avatar" style="background:#0b2">${b.avatar}</div>
-    <div class="meta"><div class="name">${b.name}</div><div class="meta-sub">${b.side.toUpperCase()}</div></div>
-    <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
-  downBotsList.innerHTML = downBots.map(b => `
-    <div class="bot"><div class="avatar" style="background:#f66">${b.avatar}</div>
-    <div class="meta"><div class="name">${b.name}</div><div class="meta-sub">${b.side.toUpperCase()}</div></div>
-    <div class="amt">$${fmt(b.amount)}</div></div>`).join('');
+  upBotsList.innerHTML = upBots.map(b => `<div class="bot"><div class="avatar" style="background:#0b2">${b.avatar}</div><div class="meta"><div class="name">${b.name}</div><div class="meta-sub">${b.side.toUpperCase()}</div></div><div class="amt">$${fmt(b.amount)}</div></div>`).join('');
+  downBotsList.innerHTML = downBots.map(b => `<div class="bot"><div class="avatar" style="background:#f66">${b.avatar}</div><div class="meta"><div class="name">${b.name}</div><div class="meta-sub">${b.side.toUpperCase()}</div></div><div class="amt">$${fmt(b.amount)}</div></div>`).join('');
 }
 
 /* --------------- Round lifecycle --------------- */
@@ -162,38 +150,28 @@ let currentUpBots = [], currentDownBots = [];
 
 setInterval(()=>{
   const s = computeState();
-
-  // start of new cycle (pos==0)
   if (s.pos === 0 && lastPos !== 0){
-    // new round
     epoch = now(); setEpoch(epoch);
     roundNum = getRound() + 1; setRound(roundNum);
-    // pick start price
     setStartPrice(series[series.length-1]);
-    // generate bots (both sides)
+
     const upCount = Math.floor(Math.random()*(BOT_MAX-BOT_MIN+1)) + BOT_MIN;
     const downCount = Math.floor(Math.random()*(BOT_MAX-BOT_MIN+1)) + BOT_MIN;
     currentUpBots = genBotsForSide(upCount, 'up');
     currentDownBots = genBotsForSide(downCount, 'down');
 
-    // update totals
-    let upTot = currentUpBots.reduce((s,b)=>s+b.amount, 0);
-    let downTot = currentDownBots.reduce((s,b)=>s+b.amount, 0);
-    totals.up = +(upTot + parseFloat(localStorage.getItem(K.UP_TOTAL) || 0)).toFixed(2);
-    totals.down = +(downTot + parseFloat(localStorage.getItem(K.DOWN_TOTAL) || 0)).toFixed(2);
+    let upTot = currentUpBots.reduce((s,b)=>s+b.amount, 0);  
+    let downTot = currentDownBots.reduce((s,b)=>s+b.amount, 0);  
+    totals.up = +(upTot + parseFloat(localStorage.getItem(K.UP_TOTAL) || 0)).toFixed(2);  
+    totals.down = +(downTot + parseFloat(localStorage.getItem(K.DOWN_TOTAL) || 0)).toFixed(2);  
     setTotals(totals.up, totals.down);
 
-    // persist bots for UI (not storing all rounds to keep small)
-    renderBots(currentUpBots, currentDownBots);
+    renderBots(currentUpBots, currentDownBots);  
     log(`Round ${getRound()} started • Bots: UP ${upCount}, DOWN ${downCount}`);
   }
-
-  // when bet window ends (enter result)
   if (s.pos === BET_WINDOW && lastPos !== BET_WINDOW){
-    // settle round now
     settleRoundOnce();
   }
-
   lastPos = s.pos;
 }, 300);
 
@@ -206,16 +184,13 @@ function placeBetUser(side){
   if(balance < amt) return toast('Insufficient balance');
 
   balance = +(balance - amt).toFixed(2); setBalance(balance);
-  // increase totals
   if(side==='up') totals.up = +(totals.up + amt).toFixed(2); else totals.down = +(totals.down + amt).toFixed(2);
   setTotals(totals.up, totals.down);
 
-  // record my bet
   myBets.push({ round:getRound(), side, amount:amt });
   localStorage.setItem(K.MY_BETS, JSON.stringify(myBets));
 
   log(`You bet $${fmt(amt)} on ${side.toUpperCase()}`);
-  // update small players count
 }
 $('betUp').addEventListener('click', ()=> placeBetUser('up'));
 $('betDown').addEventListener('click', ()=> placeBetUser('down'));
@@ -235,12 +210,11 @@ function settleRoundOnce(){
   const endPrice = series[series.length-1];
   const result = endPrice >= startPrice ? 'up' : 'down';
 
-  // pay my bets for this round
   const roundBets = myBets.filter(b=>b.round === r);
   let credit = 0;
   roundBets.forEach(b=>{
     if(b.side === result){
-      credit += b.amount * 2; // 2x payout (stake returned + win)
+      credit += b.amount * 2;
     }
   });
   if(credit > 0){
@@ -250,21 +224,15 @@ function settleRoundOnce(){
     log(`Result ${result.toUpperCase()} • You had no winning bets`);
   }
 
-  // show bots results in activity (simulate winners)
   const upWinner = result === 'up';
-  let upWin = currentUpBots.filter(b=> b.side==='up').reduce((s,b)=> s + (upWinner ? b.amount*2 : 0), 0);
-  let downWin = currentDownBots.filter(b=> b.side==='down').reduce((s,b)=> s + (!upWinner ? b.amount*2 : 0), 0);
   log(`Bots • UP total $${fmt(totals.up)} • DOWN total $${fmt(totals.down)} • Result ${result.toUpperCase()}`);
 
-  // clear myBets for this round entries (they remain in history if you want)
   myBets = myBets.filter(b => b.round !== r);
   localStorage.setItem(K.MY_BETS, JSON.stringify(myBets));
 
-  // after result, schedule clearing of bots after short delay so next round shows fresh bots
   setTimeout(()=>{
     currentUpBots = []; currentDownBots = [];
     renderBots([], []);
-    // reset totals for next round (they will be recalculated when new bots are generated)
     setTotals(0,0);
     settledRounds.delete(r);
   }, 1800);
@@ -296,42 +264,3 @@ $('copyWalletBtn').addEventListener('click', async()=>{
   const t = $('walletAddr').textContent.trim();
   try{ await navigator.clipboard.writeText(t); toast('Wallet copied'); }catch{ toast('Copy failed'); }
 });
-$('editWalletBtn').addEventListener('click', ()=> {
-  const v = prompt('Set your wallet address', $('walletAddr').textContent);
-  if(v){ $('walletAddr').textContent = v; $('depositWallet').textContent = v; localStorage.setItem('user_wallet', v); }
-});
-
-$('copyDepositWallet').addEventListener('click', async()=>{
-  const t = $('depositWallet').textContent.trim();
-  try{ await navigator.clipboard.writeText(t); toast('Deposit wallet copied'); }catch{ toast('Copy failed'); }
-});
-
-$('submitDeposit').addEventListener('click', ()=>{
-  const txn = $('depositTxn').value.trim();
-  if(!txn){ toast('Enter transaction id'); return; }
-  const arr = JSON.parse(localStorage.getItem(K.DEPOSITS) || '[]');
-  arr.push({ txn, ts: Date.now(), status: 'pending'});
-  localStorage.setItem(K.DEPOSITS, JSON.stringify(arr));
-  $('depositTxn').value = '';
-  toast('Deposit submitted — pending admin approval');
-  closeModal('depositModal');
-});
-
-$('submitWithdraw').addEventListener('click', ()=>{
-  const amt = parseFloat($('wdAmount').value||'0'); const wal = $('wdWallet').value.trim();
-  if(!(amt>=5)){ $('withdrawMsg').textContent = 'Minimum $5 required'; return; }
-  if(amt > balance){ $('withdrawMsg').textContent = 'Insufficient balance'; return; }
-  if(!wal){ $('withdrawMsg').textContent = 'Enter wallet address'; return; }
-  // keep demo: mark withdraw requested
-  $('withdrawMsg').textContent = 'Withdraw request submitted — pending admin';
-  // optionally deduct locally to simulate
-  balance = +(balance - amt).toFixed(2);
-  setBalance(balance);
-  $('wdAmount').value=''; $('wdWallet').value='';
-  closeModal('withdrawModal');
-});
-
-/* --------------- Init UI --------------- */
-renderBots([], []);
-setTotals(totals.up, totals.down);
-log('Welcome — demo started. Welcome bonus $1 applied (first time).');
