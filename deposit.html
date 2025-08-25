@@ -1,86 +1,33 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Deposit</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Deposit - BETWIN</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="deposit-container">
-    <h2>💰 Deposit</h2>
+<header class="appbar">
+  <a href="index.html" class="btn ghost">← Back</a>
+  <h2>Deposit</h2>
+</header>
 
-    <label for="walletSelect">Select Wallet:</label>
-    <select id="walletSelect"></select>
-
-    <p><strong>Wallet Address:</strong></p>
-    <div id="walletAddress" class="wallet-box"></div>
-
-    <canvas id="qrCode"></canvas>
-
-    <form id="depositForm">
-      <label>Enter Amount:</label>
-      <input type="number" id="amount" placeholder="Enter amount" required>
-
-      <label>Your Name:</label>
-      <input type="text" id="username" placeholder="Enter name" required>
-
-      <button type="submit">Submit Deposit</button>
-    </form>
+<main class="container">
+  <div class="card">
+    <p class="muted">Send funds to selected wallet and paste Transaction ID. Admin approval required. Welcome bonus $1 once.</p>
+    <div class="wallet-row">
+      <div class="label">Select Wallet</div>
+      <select id="depositWalletSelect" class="wallet-dropdown"></select>
+      <button class="mini ghost" id="copyDepositWallet">Copy</button>
+    </div>
+    <input id="depositTxn" placeholder="Transaction ID" />
+    <div class="row gap">
+      <button id="submitDeposit" class="btn primary">Submit</button>
+      <a href="index.html" class="btn">Cancel</a>
+    </div>
+    <div id="depositMsg" class="muted"></div>
   </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-  <script>
-    const DEPOSIT_WALLETS = [
-      { chain:'TRC20', addr:'TWZHqkbbYTnehQ2TxnH4NgNt4crGLNy8Ns' },
-      { chain:'Polygon', addr:'0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44' },
-      { chain:'BEP20', addr:'0xE1D4b2BEC237AEDDB47da56b82b2f15812e45B44' },
-      { chain:'TON', addr:'EQAj7vKLbaWjaNbAuAKP1e1HwmdYZ2vJ2xtWU8qq3JafkfxF' }
-    ];
-
-    const walletSelect = document.getElementById("walletSelect");
-    const walletAddress = document.getElementById("walletAddress");
-    const qrCodeCanvas = document.getElementById("qrCode");
-
-    // populate select
-    DEPOSIT_WALLETS.forEach(w => {
-      let opt = document.createElement("option");
-      opt.value = w.addr;
-      opt.textContent = w.chain;
-      walletSelect.appendChild(opt);
-    });
-
-    function updateWallet() {
-      let addr = walletSelect.value;
-      walletAddress.textContent = addr;
-      QRCode.toCanvas(qrCodeCanvas, addr, { width: 200 });
-    }
-
-    walletSelect.addEventListener("change", updateWallet);
-    updateWallet();
-
-    // backend URL
-    const API_BASE = "https://betwin-backend.onrender.com";
-
-    document.getElementById("depositForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const data = {
-        wallet: walletSelect.options[walletSelect.selectedIndex].text,
-        address: walletSelect.value,
-        amount: document.getElementById("amount").value,
-        username: document.getElementById("username").value
-      };
-
-      let res = await fetch(`${API_BASE}/api/deposit`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      let result = await res.json();
-      alert(result.msg || "Deposit submitted!");
-    });
-  </script>
+</main>
+<script src="script.js"></script>
 </body>
 </html>
